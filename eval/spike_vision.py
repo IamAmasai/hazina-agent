@@ -30,7 +30,8 @@ PRICE_IN_PER_M = 1.25
 PRICE_OUT_PER_M = 4.25
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MOCK_DIR = os.path.join(ROOT, "fixtures", "mock")
+MOCK_DIR = (os.path.abspath(sys.argv[1]) if len(sys.argv) > 1
+            else os.path.join(ROOT, "fixtures", "mock"))
 
 IMAGE_PROMPT = (
     "Extract the data from this receipt image. Return strict JSON only, with no "
@@ -221,7 +222,8 @@ def main():
     print(f"[statement csv] status={status} cost=${c:.4f} parsed={parsed is not None}")
 
     results["total_cost_usd"] = round(total_cost, 5)
-    out_path = os.path.join(ROOT, "eval", "spike-raw-results.json")
+    tag = os.path.basename(MOCK_DIR.rstrip("/")) or "mock"
+    out_path = os.path.join(ROOT, "eval", f"spike-raw-{tag}.json")
     with open(out_path, "w") as fh:
         json.dump(results, fh, indent=2)
     print(f"total estimated spend: ${total_cost:.4f}")
