@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <title>Hazina</title>
+  <rect x="2" y="2" width="44" height="44" rx="11" fill="#0A2540"/>
+  <path d="M12 9a2 2 0 012-2h20a2 2 0 012 2v31l-4.2-2.8L27.6 40l-3.6-2.7L20.4 40l-4.2-2.8L12 40z" fill="#2563EB"/>
+  <path d="M18 14.5h12M18 20h12" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M18.5 29.5l3.2 3.2 6.8-7.2" fill="none" stroke="#F2C14E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
