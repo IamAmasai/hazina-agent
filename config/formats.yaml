@@ -1,0 +1,67 @@
+# Output artefact specs for Hazi — what "eTIMS-readable / uploadable" means.
+# Researched 2026-10-28. Full analysis: research_notes/kra-rules-all-sizes-20261028/report.md Part B.
+# Principle: Hazi produces everything up to KRA's door, in KRA's own shapes.
+# It never counterfeits KRA's two sovereign acts: the control-unit signature
+# on an eTIMS invoice, and the filing submission on iTax. A human files.
+
+itax_workbook_pattern:
+  flow: download_macro_workbook_from_itax -> complete_offline -> validate_in_excel -> generates_zip -> upload_zip -> acknowledgement -> payment_slip_prn
+  implication: >
+    KRA workbooks are macro-driven and versioned by KRA. Hazi does NOT
+    generate upload zips from scratch. It generates COMPANION values files in
+    the workbook's exact section/field order + a filing checklist, so the
+    human transfers values into KRA's own workbook in minutes.
+    (Same pattern as Zoho Books / KPMG tooling: CSV drill-downs for pasting
+    into the iTax-downloaded template.)
+
+tot_return_companion:               # for profiles/tot_band.yaml
+  itax_obligation: "Income Tax - Turnover Tax"
+  workbook_sections:                # per the live TOT form walk-through
+    A_return_information: [taxpayer_pin, type_of_return (Original|Amended), return_period_from, return_period_to, is_partnership]
+    B_local_purchases: [details_of_local_purchases_if_applicable]
+    C_payments: [payments_or_credits_if_applicable]
+    D_turnover_and_tax: [gross_monthly_turnover, tot_rate_from_config, tot_payable]
+    E_partnership: [partners_profit_sharing_ratio_if_partnership]
+  hazi_outputs: [tot_values.csv, tot_filing_checklist.md, tot_nil_variant (zero turnover)]
+
+annual_income_tax_pack:             # micro_standard + standard profiles
+  hazi_outputs: [profit_computation, tax_computation (bands | 0.30), instalment_schedule, it1_it2c_companion_values.csv]
+
+vat_annex_csvs:                     # vat_overlay only; mirrors KRA auto-populated pack
+  kra_pack_files:
+    sales_standard_with_pin: SEC_B_WITH_VAT_PIN
+    purchases_with_pin: SEC_F_WITH_VAT_PIN
+    purchases_zero_rated: SEC_H_WITH_VAT_PIN
+  columns: [type_of_transaction (Local|Import), counterparty_pin, counterparty_name,
+            invoice_date, invoice_number, description, customs_entry_number (imports),
+            taxable_value, vat_amount,
+            relevant_invoice_number (returns), relevant_invoice_date (returns)]
+  sections: { B: sales_general_rate, F: purchases_general_rate, G: purchases_other_rate,
+              H: purchases_zero_rated, I: purchases_exempt, J: imported_services,
+              K: payment_credits, N: vat_due_computation }
+  hazi_outputs: [sec_b.csv, sec_f.csv, sec_h.csv, net_vat_sheet]
+
+etims_invoice_payload:              # KRA TIS for OSCU/VSCU Technical Spec v2.0 (Apr 2023)
+  purpose: pre_signing_payload      # complete + validated, ready for a certified route
+  header: [seller_name, seller_pin, seller_address, bhfId, buyer_name, bcncId_buyer_pin,
+           invoice_number, issue_datetime, sales_type_code, receipt_type_code, payment_type_code, currency]
+  item: [itemSeq, itemClsCd (KRA classification code), itemCd, itemNm, bcncId,
+         pkgUnitCd, qtyUnitCd, qty, untpc, splpc, dcRate, dcAmt,
+         taxablAmt, taxTyCd (KRA Sys Code 4 rate class), tax, totAmt]
+  signing_block_RETURNED_BY_CONTROL_UNIT_never_generated_by_hazi:
+    [sdcId (CU id, e.g. KRACU...), sdcRcptNo / curRcptNo, totRcptNo,
+     intrlData (26-char internal data), rcptSign (16-char receipt signature),
+     sdcDateTime, qr_code]
+  api_shape: "OSCU sales-save JSON: request = transaction + items; response = {resultCd, resultMsg, resultDt, data:{curRcptNo, totRcptNo, intrlData, rcptSign, sdcDateTime}}"
+  integration_routes:
+    oscu: { mode: online_real_time_signing, status: requires_kra_certification }
+    vscu: { mode: bulk_offline_queue_and_sync, status: requires_kra_certification }
+    certification: "KRA process: development -> sandbox testing -> vetting -> certification (self-integration or certified 3rd-party integrator). Production CU credentials issue only through it."
+    no_integration_client_routes: [etims_lite_ussd_*222#, etims_lite_web_ecitizen, etims_online_portal, etims_client_app, buyer_initiated_invoicing]
+  hazi_outputs: [etims_payload_per_sale.json, purchase_invoice_verification_register.csv]
+
+expense_register:                   # all profiles — the deduction/input-VAT protector
+  columns: [date, supplier_name, supplier_pin, description, amount, vat_amount,
+            etims_invoice_number, cu_number, qr_captured (bool), etims_status (supported|missing|invalid),
+            deductible_or_claimable (derived)]
+  hazi_outputs: [expense_register.csv]
