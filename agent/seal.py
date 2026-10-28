@@ -19,8 +19,10 @@ def _content_hash(payload):
 
 def seal_decision(record, decision):
     # Attest's record contract (api/attestations/index.ts): the seal is the
-    # SHA-256 of the decision content. The content lives in Hazi's record;
-    # anyone can re-hash it and walk the chain via GET ?hash=.
+    # SHA-256 of the decision content, stored as the attestation's
+    # evidence.hash. Verify a decision by fetching its attestation and
+    # comparing evidence.hash against a fresh hash of the decision; Attest
+    # additionally chains (prevHash) and signs every attestation.
     blob = {
         "business": record.data["business"],
         "period": record.data["period"],
