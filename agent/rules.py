@@ -91,6 +91,59 @@ def vat_watch(trailing_12mo_taxable_supplies):
     }
 
 
+def graduated_tax(monthly_profit, individual_cfg):
+    """Apply the monthly graduated bands from config; personal relief is an
+    annual figure, applied as relief/12 per month. Never below zero."""
+    if monthly_profit <= 0:
+        return 0.0
+    tax = 0.0
+    lower = 0.0
+    for band in individual_cfg.get("bands_monthly") or []:
+        cap = band.get("up_to_kes")
+        top = float("inf") if cap is None else cap
+        if monthly_profit > lower:
+            tax += (min(monthly_profit, top) - lower) * band["rate"]
+        lower = top
+        if monthly_profit <= top:
+            break
+    relief = (individual_cfg.get("personal_relief_per_year_kes") or 0) / 12
+    return round(max(tax - relief, 0.0), 2)
+
+
+def compare_regimes(transactions, legal_form="sole_trader"):
+    """TOT vs standard on the same month — the election-out conversation.
+    Hazi models both; the client decides and files any election. Standard
+    estimate counts business expenses only (merchant-classified)."""
+    tot_cfg = load_profile("tot_band")
+    std_cfg = load_profile("standard")
+    tot = compute_tot(transactions, tot_cfg, "9999-12-31")
+    gross = sum(t["amount_kes"] for t in transactions
+                if t.get("direction") == "in" and t.get("source") == "mpesa_statement")
+    expenses = sum(t["amount_kes"] for t in transactions
+                   if t.get("direction") == "out"
+                   and t.get("source") == "mpesa_statement"
+                   and t.get("business", True))
+    profit = gross - expenses
+    if legal_form == "limited_company":
+        std_tax = round(max(profit, 0.0) * (std_cfg.get("company") or {}).get("tax_rate", 0.30), 2)
+        basis = "company rate 0.30 on profit"
+    else:
+        std_tax = graduated_tax(profit, std_cfg.get("individual") or {})
+        basis = "individual graduated bands on profit, relief applied"
+    return {
+        "gross_sales_kes": round(gross, 2),
+        "business_expenses_kes": round(expenses, 2),
+        "profit_kes": round(profit, 2),
+        "tot_payable_kes": tot["tot_payable_kes"],
+        "standard_estimate_kes": std_tax,
+        "standard_basis": basis,
+        "cheaper_this_month": "tot" if tot["tot_payable_kes"] <= std_tax else "standard",
+        "note": "Indicative only. TOT is a final tax on gross; standard taxes "
+                "profit but demands eTIMS-supported expenses and an annual return.",
+        "source": "config/profiles/tot_band.yaml + standard.yaml",
+    }
+
+
 def etims_split(expenses):
     """Split expense transactions into eTIMS-backed (deductible) and
     paper-only (disallowed on the standard regime). Expenses are dicts with
