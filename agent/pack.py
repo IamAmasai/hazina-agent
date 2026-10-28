@@ -81,7 +81,7 @@ def pack_markdown(record_data, tot, vat=None, etims=None, regime=None):
         lines.append(f"- {doc['kind']}: sha256 {sha[:16]}… ({doc['path']})")
     for d in record_data["decisions"]:
         lines.append(f"- decision: {d['kind']} — {d['detail']} "
-                     f"(actor: {d['actor']}, attestation: {d.get('attestation_id') or 'pending'})")
+                     f"(actor: {d['actor']}, record hash: {(d.get('content_sha256') or '')[:16]}…)")
     return "\n".join(lines) + "\n"
 
 
