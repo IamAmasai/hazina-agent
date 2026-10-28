@@ -31,6 +31,10 @@ def parse_mpesa_statement(csv_text):
         for name in names:
             if name in header:
                 return header.index(name)
+        for name in names:  # fall back to a cell that contains the name
+            for i, cell in enumerate(header):
+                if name in cell:
+                    return i
         return None
 
     c_receipt = col("receipt no", "receipt no.", "receipt")
