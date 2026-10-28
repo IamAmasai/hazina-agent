@@ -7,7 +7,7 @@ returns against that digital record — an expense without an eTIMS invoice behi
 it is disallowed. But a small business's records still live in M-Pesa messages,
 till statements and paper receipts in a drawer. Hazina is the bridge: hand it the
 pile you already have, and it returns books that can stand in the digital system.
-The agent who does the work — who reads, matches, asks and seals — is **Hazi**.
+The agent who does the work — who reads, matches, asks and computes — is **Hazi**.
 
 ## What the agent does
 
@@ -23,19 +23,23 @@ One month-end run:
 5. **Compute** — tax rules live in versioned config (`config/rules.ke.yaml`),
    never in the model: Turnover Tax on gross sales, a rolling VAT-registration
    threshold watch, and the eTIMS-backed vs paper-only expense split.
-6. **Seal** — every match, classification and merchant answer is written to
-   Attest, so every figure can later answer "why is this number what it is?"
+6. **Record** — every match, classification and merchant answer is written
+   into the run's audited record, hash-stamped and tied to the documents it
+   rests on, so every figure can later answer "why is this number what it is?"
 7. **Hand over** — a filing pack: the TOT figures, threshold status, flagged
    items, and the evidence index. **A human files on iTax. The agent never
    submits anything itself, and never invents a record for a gap.**
 
-## Pre-existing vs built during the event (Oct 28 – Nov 4, 2026)
+## Pre-existing vs built during the event (26 Oct – 4 Nov, 2026)
 
-- **Pre-existing (not in this repo):** the Hazina bookkeeping scaffold and the
-  Attest attestation API — both Ansai Technologies products, called here as
-  external services.
-- **Built during the event:** everything in this repository — the reconciliation
-  agent, its tools, the rules engine, and the evaluation harness.
+- **Pre-existing:** the Hazina product concept and the pilot relationship
+  with Beautify by Angel. No pre-existing code is used anywhere in the build.
+- **Built during the event:** everything in this repository — the agent, its
+  tools, the rules engine, the merchant web app, and the evaluation harness —
+  written from scratch during the event window.
+- **Post-hackathon roadmap:** sealing each run's decisions to Attest, Ansai's
+  attestation infrastructure, so a finished pack also carries a remotely
+  verifiable, signed seal.
 
 ## Pilot
 
