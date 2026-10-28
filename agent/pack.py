@@ -24,7 +24,7 @@ def tot_values_csv(record_data, tot, taxpayer_pin=""):
     return buf.getvalue()
 
 
-def pack_markdown(record_data, tot, vat=None, etims=None):
+def pack_markdown(record_data, tot, vat=None, etims=None, regime=None):
     lines = [
         f"# Filing pack — {record_data['business']} — {record_data['period']}",
         "",
@@ -37,6 +37,18 @@ def pack_markdown(record_data, tot, vat=None, etims=None):
         f"- **TOT payable: KSh {tot['tot_payable_kes']:,.2f}**",
         "- Due: 20th of the following month. A zero-sales month still files a nil return.",
     ]
+    if regime:
+        lines += [
+            "",
+            "## Regime comparison (indicative — the client decides)",
+            f"- Profit this month: KSh {regime['profit_kes']:,.2f} "
+            f"(sales {regime['gross_sales_kes']:,.2f} − business expenses "
+            f"{regime['business_expenses_kes']:,.2f})",
+            f"- On TOT: KSh {regime['tot_payable_kes']:,.2f} · "
+            f"On standard ({regime['standard_basis']}): "
+            f"KSh {regime['standard_estimate_kes']:,.2f}",
+            f"- Cheaper this month: {regime['cheaper_this_month']}. {regime['note']}",
+        ]
     if vat:
         lines += [
             "",
@@ -58,7 +70,12 @@ def pack_markdown(record_data, tot, vat=None, etims=None):
     if open_q:
         lines += [f"- {q['id']} ({q['transaction_id']}): {q['question']}" for q in open_q]
     else:
-        lines.append("- None. Every gap was answered or is flagged below.")
+        lines.append("- None outstanding.")
+    escalated = [q for q in record_data["questions"] if q["status"] == "escalated"]
+    if escalated:
+        lines += ["", "## Flags — asked, unanswered, carried unresolved"]
+        lines += [f"- {q['id']} ({q['transaction_id']}): {q['question']}"
+                  for q in escalated]
     lines += ["", "## Evidence index"]
     for sha, doc in record_data["documents"].items():
         lines.append(f"- {doc['kind']}: sha256 {sha[:16]}… ({doc['path']})")
@@ -68,10 +85,11 @@ def pack_markdown(record_data, tot, vat=None, etims=None):
     return "\n".join(lines) + "\n"
 
 
-def write_pack(outdir, record_data, tot, vat=None, etims=None, taxpayer_pin=""):
+def write_pack(outdir, record_data, tot, vat=None, etims=None, regime=None,
+               taxpayer_pin=""):
     os.makedirs(outdir, exist_ok=True)
     with open(os.path.join(outdir, "tot_values.csv"), "w") as fh:
         fh.write(tot_values_csv(record_data, tot, taxpayer_pin))
     with open(os.path.join(outdir, "pack.md"), "w") as fh:
-        fh.write(pack_markdown(record_data, tot, vat, etims))
+        fh.write(pack_markdown(record_data, tot, vat, etims, regime))
     return outdir
