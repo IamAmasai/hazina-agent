@@ -116,3 +116,16 @@ Spark reviewed this design on the credits; three points were right and are in:
 
 Beautify by Angel — a real Nairobi salon — is workspace #1. Her October 2026
 closes inside Hazina, with Hazi, on her real records.
+
+## Integrations (only where the connection carries weight)
+- **M-Pesa** — statement exports import into every month today. Roadmap: Daraja live feeds (till/bank movements as they happen).
+- **KRA** — outputs in filing shapes: pack assembled in KRA order, TOT values file (CSV) for iTax, eTIMS evidence split on every cost. Hazina never files or signs on the merchant's behalf.
+- **Meta Muse Spark** — receipt vision + Ask Hazi, on the hackathon credits during the event window.
+- **WhatsApp** — roadmap: Hazi's questions/answers where the business already talks.
+- **Ansai ecosystem** — Hazina runs on the same spine as the rest of Ansai (Supabase + Vercel, passcode-session pattern from the Board); Attest sealing of packs is a post-hackathon roadmap item, deliberately out of the event build.
+
+## Libraries & shared code
+- **Rules as config** — the KRA rules live once in `config/rules.ke.json` (generated from the researched YAML set); the Python pipeline and the product both read the same numbers. The model never supplies a rate.
+- **Motion** (motion.dev) — spring-physics entrances, hardware-accelerated, loaded from CDN as progressive enhancement only.
+- **NumberFlow** — digit-roll figure for the pack's tax hero; respects reduced-motion; falls back to plain text.
+- **Ansai design system** — the Ansai palette v2 (azure/gold on blue-tinted neutrals), Fraunces + Inter, the product-mark family.
