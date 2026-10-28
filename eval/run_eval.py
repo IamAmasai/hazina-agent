@@ -65,8 +65,7 @@ def grade_end_to_end():
         "line_items": f"{items_ok}/{items_total}",
         "matches": f"{len(rec['matches'])}/{len(truth['receipts'])}",
         "tot_exact": expected_tot == 865.50 and "865.5" in tot_decision["detail"],
-        "attested": sum(1 for d in rec["decisions"]
-                        if (d.get("attestation_id") or "").startswith("att_")),
+        "stamped": sum(1 for d in rec["decisions"] if d.get("content_sha256")),
         "decisions": len(rec["decisions"]),
         "tokens_total": tokens,
         "open_questions": sum(1 for q in rec["questions"] if q["status"] == "open"),
@@ -129,7 +128,7 @@ def main():
              f"- Line items exact: {e2e['line_items']}",
              f"- Receipts matched to statement lines: {e2e['matches']}",
              f"- TOT exact vs ground truth: {e2e['tot_exact']}",
-             f"- Decisions attested live: {e2e['attested']}/{e2e['decisions']}",
+             f"- Decisions hash-stamped in the record: {e2e['stamped']}/{e2e['decisions']}",
              f"- Model tokens (receipt extractions): {e2e['tokens_total']}",
              f"- Open questions left hanging: {e2e['open_questions']}",
              "", "## Failure cases (must degrade to questions, never inventions)"]
