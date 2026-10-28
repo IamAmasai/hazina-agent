@@ -30,7 +30,7 @@ class Record:
             "transactions": [],             # {id, date, details, amount_kes, direction, source, category, confidence}
             "matches": [],                  # {transaction_id, document_sha, basis}
             "questions": [],                # {id, transaction_id, question, answer, status}
-            "decisions": [],                # {kind, detail, actor, attestation_id}
+            "decisions": [],                # {kind, detail, actor, content_sha256}
             "log": [],                      # {ts, actor, kind, detail}
         }
 
