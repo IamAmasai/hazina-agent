@@ -7,7 +7,7 @@ slices, each ending in something runnable and graded.
 
 **Hazi**, the tax agent inside **Hazina** (Ansai Technologies). A small or micro
 business hands Hazi its month — M-Pesa statement, bank statement, photos of
-paper receipts — and Hazi returns reconciled, Attest-sealed books plus a filing
+paper receipts — and Hazi returns reconciled books plus a filing
 pack in KRA's own shapes. Story: *helping small and micro businesses keep up
 with the digitizing tax systems.*
 
@@ -15,7 +15,7 @@ Pilot: **Beautify by Angel** (real records, evening of Oct 28). Development runs
 on a mock salon month until then.
 
 Entry rules (Discord #rules): fresh public repo, event-window work only;
-pre-existing Hazina scaffold + Attest declared and called externally; 3-minute
+the Hazina concept and the pilot relationship pre-date the event — no pre-existing code; 3-minute
 demo opening with the layering line; submission by Wed Nov 4, 9 PM ET
 (= Nov 5 05:00 EAT; our real deadline is the evening of Nov 4 EAT).
 
@@ -25,8 +25,8 @@ One audited **run record** is the centre. Every stage reads and writes it;
 nothing lives only in a model conversation.
 
 ```
-documents ──► ingest ──► extract ──► record ◄──► match ──► ask ──► rules ──► seal ──► pack
- (hash-     (registry)  (Spark       (one      (determin-  (merchant (config) (Attest) (KRA
+documents ──► ingest ──► extract ──► record ◄──► match ──► ask ──► rules ──► stamp ──► pack
+ (hash-     (registry)  (Spark       (one      (determin-  (merchant (config) (hashes)  (KRA
   cached)                vision)     JSON)      istic)     answers)                     shapes)
 ```
 
@@ -42,8 +42,9 @@ documents ──► ingest ──► extract ──► record ◄──► match
 - **Verification lives in the committing tool**: the pack cannot finalise while
   unexplained gaps exist — gaps are either answered by the merchant or carried
   into the pack as explicit flags.
-- **Seal**: decisions are written to Attest (`POST /attestations`) — external,
-  pre-existing, declared.
+- **Stamp**: every decision is hash-stamped into the record (SHA-256 of its
+  content), binding it to the documents it rests on. Remote sealing to Attest
+  is post-hackathon roadmap, not part of this build.
 - **Console**: `ui/` renders the record (runs, questions, pack) and never
   imports the agent. Borrowed from the workshop console pattern.
 
@@ -70,9 +71,9 @@ documents ──► ingest ──► extract ──► record ◄──► match
   (eTIMS-backed vs paper-only), regime comparison (TOT vs standard) as a draft
   only. *Gate: profile unit checks — salon (TOT+VAT watch) and consultancy
   (standard, TOT-excluded) assemble correctly.*
-- **S5 Seal** (Nov 1): Attest writes for matches, classifications, answers;
+- **S5 Record integrity** (Nov 1): decisions hash-stamped in the record;
   pack carries the evidence index. *Gate: every figure in the pack traces to a
-  record + attestation id.*
+  record + document hash.* (Done early, Oct 28.)
 - **S6 Console UI** (Nov 1–2): run view (documents, matches, questions, pack),
   phone-first. *Gate: the whole month is followable on a phone screen.*
 - **S7 Eval + hardening** (Nov 2–3): harness reruns the month from scratch
@@ -81,8 +82,8 @@ documents ──► ingest ──► extract ──► record ◄──► match
   never inventions. Angel reviews her own pack. *Gate: harness numbers printed;
   zero invented records.*
 - **S8 Demo + submission** (Nov 3–4): 3-minute phone-recorded demo (layering
-  line → messy month → Hazi asks → sealed pack → "why was this flagged?"
-  answered with receipt + rule + attestation); write-up; repo public; submit
+  line → messy month → Hazi asks → finished pack → "why was this flagged?"
+  answered with receipt + rule + record hash); write-up; repo public; submit
   by evening Nov 4 EAT.
 
 ## 4. Out of scope (named, on purpose)
