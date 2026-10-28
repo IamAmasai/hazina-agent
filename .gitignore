@@ -1,0 +1,6 @@
+.env
+fixtures/*
+!fixtures/README.md
+__pycache__/
+*.pyc
+runs/
