@@ -97,14 +97,14 @@ def main():
     rec.data["decisions"].append({
         "kind": "tot_computation",
         "detail": f"gross {tot['gross_sales_kes']} x {tot['rate']} = {tot['tot_payable_kes']}",
-        "actor": "verification", "attestation_id": None})
+        "actor": "verification"})
     if match_stats:
         rec.data["decisions"].append({
             "kind": "reconciliation",
             "detail": f"{len(match_stats['matched'])} receipts matched to statement "
                       f"lines; {len(match_stats['unmatched_statement'])} lines "
                       f"unmatched and put to the merchant",
-            "actor": "verification", "attestation_id": None})
+            "actor": "verification"})
         answered = [q for q in rec.data["questions"] if q["status"] == "answered"]
         if answered:
             rec.data["decisions"].append({
@@ -114,7 +114,7 @@ def main():
                               f"{q['transaction_id']} -> "
                               f"{(next((t for t in rec.transactions() if t['id'] == q['transaction_id']), {}) or {}).get('category')}"
                               for q in answered),
-                "actor": "human", "attestation_id": None})
+                "actor": "human"})
 
     statement_outs = [t for t in rec.transactions()
                       if t.get("source") == "mpesa_statement"
@@ -126,11 +126,12 @@ def main():
     roll = rules.rolling_turnover([(args.period, tot["gross_sales_kes"])])
     vat = rules.vat_watch(roll["annualised_projection_kes"])
     regime = rules.compare_regimes(rec.transactions())
-    from agent.seal import seal_run
-    sealed = seal_run(rec)
-    print(f"sealed decisions: {len(sealed)} "
-          f"({sum(1 for d in sealed if d['seal_status'] == 'attested')} attested, "
-          f"{sum(1 for d in sealed if d['seal_status'] != 'attested')} deferred)")
+    import hashlib as _hl, json as _js
+    for d in rec.data["decisions"]:
+        blob = {"business": rec.data["business"], "period": rec.data["period"],
+                "kind": d.get("kind"), "detail": d.get("detail"), "actor": d.get("actor")}
+        d["content_sha256"] = _hl.sha256(_js.dumps(blob, sort_keys=True).encode()).hexdigest()
+    print(f"decisions recorded: {len(rec.data['decisions'])} (hash-stamped in the record)")
     write_pack(args.out, rec.data, tot, vat=vat, etims=etims, regime=regime)
     rec.save(os.path.join(args.out, "record.json"))
     print(f"transactions: {len(rec.transactions())}")
