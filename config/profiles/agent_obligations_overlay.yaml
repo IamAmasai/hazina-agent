@@ -1,0 +1,37 @@
+# Overlays: the business as KRA's collection agent.
+# Scope for the 7-day build: TRACK and WARN. Full payroll computation is out
+# of scope; withholding on the client's own payments is a register + reminder.
+
+overlay: employer
+applies_when: { has_employees: true }
+paye:
+  bands: graduated_individual_bands   # 10%..35% — see micro_standard.yaml
+  due: "9th day of the following month"   # return + payment, same cluster as levies
+  late_filing: { rate: 0.25, floor_kes: 10000 }
+  late_payment: { rate: 0.05, interest_per_month: 0.01 }
+levies_deducted_before_paye:        # Tax Laws (Amendment) Act 2024, from 2024-12-27
+  shif: { rate: 0.0275, base: gross_pay, min_kes: 300 }
+  affordable_housing_levy: { employee_rate: 0.015, employer_rate: 0.015, base: gross_pay }
+  nssf: { act_schedule: true, note: "Tier I/II; Year-4 limits from Feb 2026: LEL 9000 / UEL 108000" }
+hazi:
+  track: [headcount, gross_payroll_totals]
+  warn: [payroll_cluster_deadline_9th]
+  never: [represent_hazi_output_as_a_payroll_filing]
+
+overlay: withholding_agent
+applies_when: { pays_rent_or_professional_fees_or_interest_or_dividends: true }
+remittance_due: "20th day of the following month"   # withholding VAT has its own faster cycle for appointed agents
+resident_rates:                       # verify per payment type against KRA WHT tables at build
+  management_professional_consultancy_fees: { rate: 0.05, note: "consultancy-type WHT bites at aggregate >= 24000/month" }
+  rent: { rate: 0.10 }
+  interest: { rate: 0.15, note: "qualifying interest may be final" }
+  dividends: { rate: 0.05, final: true }
+  royalties: { rate: 0.05 }
+  contractual_fees: { rate: 0.03 }
+non_resident_rates_differ: true       # e.g. professional 20%, dividends 15%, royalties 20%, rent 30%
+hazi:
+  track: [wht_deducted_register, wht_certificates_received_register]
+  warn: [remittance_deadline_20th]
+  never:
+    - net_wht_suffered_against_wht_to_remit   # suffered WHT is the client's credit; remittance is KRA's money
+    - treat_non_final_wht_as_a_cost_to_the_payee
