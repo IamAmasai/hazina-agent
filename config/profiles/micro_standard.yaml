@@ -1,0 +1,41 @@
+# Profile: micro / informal — annual turnover BELOW KSh 1,000,000.
+# Regime: STANDARD income tax on profit. TOT is NOT available below the floor
+# (s.12C band starts above 1,000,000). PwC: sub-1M MSMEs are exempt from TOT
+# but must still declare and file under the ordinary regime.
+# Presumptive Income Tax (Finance Act 2018, 15% of county permit fee) is
+# history for filing purposes — TOT replaced it from 2020-01-01. Do not compute.
+
+profile: micro_standard
+applies_when:
+  annual_turnover_kes: { lt: 1000000 }
+
+individual:                       # sole trader / partnership share
+  tax_base: profit                # receipts - allowable expenses
+  bands_monthly:                  # graduated, in force since 2023-07-01
+    - { up_to_kes: 24000, rate: 0.10 }
+    - { up_to_kes: 32333, rate: 0.25 }
+    - { up_to_kes: 500000, rate: 0.30 }
+    - { up_to_kes: 800000, rate: 0.325 }
+    - { up_to_kes: null, rate: 0.35 }
+  personal_relief_per_year_kes: 28800
+  return: { form: IT1, due: "30 June following the year of income" }
+
+company:                          # tiny limited company: still corporation tax
+  tax_rate: 0.30
+  return: { form: IT2C, due: "within 6 months after accounting year-end" }
+  balance_due: "last day of the 4th month after year-end"
+
+instalment_tax: { applies_if_liability_above_kes: 40000 }   # see rules.ke.yaml calendar
+
+hazi:
+  compute:
+    - reconciled_profit (sales - eTIMS-supported allowable expenses)
+    - indicative_tax (bands for individuals; 0.30 for companies)
+    - instalment_schedule_if_triggered
+  watch:
+    - turnover_approaching_tot_floor (1000000) — regime change ahead; TOT may be worse on thin margins
+    - expenses_missing_etims_invoice — non-deductible since 2024-01-01
+    - annual_return_deadline
+  never:
+    - register_or_file_tot_below_the_floor
+    - advise_that_nothing_is_owed_or_due — the annual return is due even if tax is nil
