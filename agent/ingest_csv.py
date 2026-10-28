@@ -37,7 +37,7 @@ def parse_mpesa_statement(csv_text):
     c_time = col("completion time", "date", "transaction date")
     c_details = col("details", "transaction details")
     c_in = col("paid in", "paid in (kes)", "credit")
-    c_out = col("withdrawn", "withdrawn (kes)", "debit")
+    c_out = col("withdrawn", "withdrawn (kes)", "paid out", "paid out (kes)", "debit")
     c_balance = col("balance", "balance (kes)")
 
     txns = []
