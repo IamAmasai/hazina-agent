@@ -31,6 +31,8 @@ def main():
     ap.add_argument("--profile", default="tot_band")
     ap.add_argument("--receipts", default=None,
                     help="directory of receipt images to extract and match")
+    ap.add_argument("--answers", default=None,
+                    help="JSON of merchant answers keyed by statement receipt code")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -68,13 +70,45 @@ def main():
                 f"{len(match_stats['unmatched_receipts'])} receipts unmatched, "
                 f"{len(match_stats['unmatched_statement'])} statement lines unmatched")
 
+    # Ask loop: unexplained statement lines become merchant questions.
+    gate = None
+    if match_stats:
+        from agent import ask
+        ask.generate_questions(rec, match_stats["unmatched_statement"])
+        if args.answers:
+            import json as _json
+            with open(args.answers) as fh:
+                answers = _json.load(fh)
+            by_id = {t["id"]: t for t in rec.transactions()}
+            for q in list(rec.data["questions"]):
+                if q["status"] != "open":
+                    continue
+                code = (by_id.get(q["transaction_id"]) or {}).get("receipt")
+                if code and code in answers:
+                    a = answers[code]
+                    ask.apply_answer(rec, q["id"], a["answer"],
+                                     category=a.get("category"),
+                                     business=a.get("business", True))
+        ask.escalate_unanswered(rec)
+        gate = ask.finalise_gate(rec)
+
     period_last_day = f"{args.period}-31"
     tot = rules.compute_tot(rec.transactions(), profile_cfg, period_last_day)
     rec.data["decisions"].append({
         "kind": "tot_computation",
         "detail": f"gross {tot['gross_sales_kes']} x {tot['rate']} = {tot['tot_payable_kes']}",
         "actor": "verification", "attestation_id": None})
-    write_pack(args.out, rec.data, tot)
+    statement_outs = [t for t in rec.transactions()
+                      if t.get("source") == "mpesa_statement"
+                      and t.get("direction") == "out"
+                      and t.get("business", True)]
+    for t in statement_outs:
+        t.setdefault("has_etims_invoice", False)  # paper trail only, unless evidenced
+    etims = rules.etims_split(statement_outs)
+    roll = rules.rolling_turnover([(args.period, tot["gross_sales_kes"])])
+    vat = rules.vat_watch(roll["annualised_projection_kes"])
+    regime = rules.compare_regimes(rec.transactions())
+    write_pack(args.out, rec.data, tot, vat=vat, etims=etims, regime=regime)
     rec.save(os.path.join(args.out, "record.json"))
     print(f"transactions: {len(rec.transactions())}")
     if match_stats:
@@ -84,6 +118,12 @@ def main():
     print(f"gross sales:  KSh {tot['gross_sales_kes']:,.2f}")
     print(f"TOT payable:  KSh {tot['tot_payable_kes']:,.2f} at {tot['rate'] * 100:.1f}%")
     print(f"open questions: {sum(1 for q in rec.data['questions'] if q['status'] == 'open')}")
+    if gate:
+        print(f"finalise gate: ok={gate['ok']} escalated={gate['escalated']}")
+    print(f"regime check: TOT {regime['tot_payable_kes']:,.2f} vs standard "
+          f"{regime['standard_estimate_kes']:,.2f} (profit {regime['profit_kes']:,.2f})")
+    print(f"VAT watch: annualised {roll['annualised_projection_kes']:,.0f} vs "
+          f"threshold {vat['threshold_kes']:,.0f} — must register: {vat['must_register']}")
     print(f"pack written to {args.out}/ (pack.md, tot_values.csv, record.json)")
 
 
