@@ -16,7 +16,8 @@ const VAT_THRESHOLD = RULES ? RULES.vat.registration_threshold_annual : 5000000;
 const COMPANY_RATE = RULES ? RULES.standard_income_tax.company_rate : 0.30;
 
 const sha256 = (s) => crypto.createHash("sha256").update(String(s)).digest("hex");
-const envReady = () => !!(process.env.HAZINA_SUPABASE_URL && process.env.HAZINA_SUPABASE_SERVICE_KEY);
+const SB_URL = () => process.env.HAZINA_SUPABASE_URL || process.env.HAZINA_SUPERBASE_URL || ""; // accepts his spelling too
+const envReady = () => !!(SB_URL() && process.env.HAZINA_SUPABASE_SERVICE_KEY);
 
 function sbHeaders() {
   const h = { "Content-Type": "application/json" };
@@ -26,7 +27,7 @@ function sbHeaders() {
   return h;
 }
 async function sb(path, opts = {}) {
-  const base = process.env.HAZINA_SUPABASE_URL.replace(/\/$/, "");
+  const base = SB_URL().replace(/\/$/, "");
   const r = await fetch(base + "/rest/v1/" + path, { headers: sbHeaders(), ...opts });
   const text = await r.text();
   let body = null;
