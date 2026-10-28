@@ -2,7 +2,7 @@
 """Hazi's console — renders a run directory, never imports the agent
 (workshop console pattern). Reads record.json + pack.md and shows the month
 the way the merchant sees it: what came in, what matched, what Hazi asked,
-what it computed, and the seals behind every figure. Phone-first, no JS.
+what it computed, and the record behind every figure. Phone-first, no JS.
 
   python3 ui/console.py --run runs/2026-10 --export console.html
   python3 ui/console.py --run runs/2026-10 --port 8765
@@ -54,8 +54,7 @@ def render(run_dir):
 profile: {esc((rec.get('profile') or {}).get('income_tax_profile'))}</div>
 <div class="card"><div class="sub">Turnover Tax payable</div>
 <div class="big">{esc(tot_line.get('detail', '—'))}</div>
-<div class="mono">attestation: {esc(tot_line.get('attestation_id') or 'pending')} 
-({esc(tot_line.get('seal_status') or '')})</div></div>"""]
+<div class="mono">record hash: {esc((tot_line.get('content_sha256') or '')[:16])}…</div></div>"""]
 
     parts.append("<h2>Documents</h2><div class='card'><table>")
     for sha, doc in rec["documents"].items():
@@ -82,10 +81,10 @@ profile: {esc((rec.get('profile') or {}).get('income_tax_profile'))}</div>
     else:
         parts.append("<div class='card'>No questions — every line was evidenced.</div>")
 
-    parts.append("<h2>Decisions & seals</h2><div class='card'><table>")
+    parts.append("<h2>Decisions</h2><div class='card'><table>")
     for d in rec["decisions"]:
         parts.append(f"<tr><td>{esc(d['kind'])}</td><td>{esc(d['detail'])}</td>"
-                     f"<td class='mono'>{esc(d.get('attestation_id') or 'pending')}</td></tr>")
+                     f"<td class='mono'>{(d.get('content_sha256') or '')[:16]}…</td></tr>")
     parts.append("</table></div>")
     parts.append(f"<h2>Filing pack</h2><pre>{esc(pack)}</pre></body></html>")
     return "".join(parts)
