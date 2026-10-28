@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hazi — Hazina's tax agent</title>
+<meta name="description" content="Hand Hazi the month — M-Pesa statement and paper receipts in, a reconciled KRA filing pack out.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F6FB; --paper:#FFFFFF; --ink:#0B1B2B; --ink2:#33506B; --mut:#64798E;
+  --azure:#2563EB; --azure2:#38BDF8; --gold:#F2C14E; --gold-d:#B8860B;
+  --line:#E3EAF3; --line2:#EEF2F8;
+  --ok:#12805C; --ok-bg:#E3F5EC; --warn:#96690A; --warn-bg:#FDF0D3; --bad:#B3372F; --bad-bg:#FDECEA;
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  --shadow:0 1px 2px rgba(11,27,43,.05),0 10px 30px -12px rgba(11,27,43,.14);
+  --shadow-lg:0 2px 4px rgba(11,27,43,.06),0 24px 48px -16px rgba(11,27,43,.22);
+  --ease:cubic-bezier(.22,.9,.28,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;scroll-padding-top:108px;scroll-padding-bottom:100px}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);margin:0;font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(560px 340px at 85% -60px, rgba(56,189,248,.20), transparent 65%),
+    radial-gradient(520px 320px at -10% 12%, rgba(242,193,78,.16), transparent 65%),
+    radial-gradient(700px 500px at 50% 115%, rgba(37,99,235,.10), transparent 65%);}
+#wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:0 16px 120px}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:40;margin:0 -16px;padding:12px 16px 10px;
+  background:rgba(244,246,251,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(227,234,243,.8)}
+.hrow{display:flex;align-items:center;gap:11px}
+.mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,#1D4ED8,#2563EB 55%,#38BDF8);display:grid;place-items:center;box-shadow:0 6px 16px -6px rgba(37,99,235,.55);flex:none}
+.mark svg{width:24px;height:24px}
+.hname{font-family:'Fraunces',serif;font-weight:700;font-size:23px;letter-spacing:.2px;line-height:1}
+.hsub{font-size:11.5px;color:var(--mut);font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44vw}
+.hbiz{margin-left:auto;text-align:right;min-width:0}
+.hbiz b{display:block;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38vw}
+.hbiz span{font-size:11.5px;color:var(--mut);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.progress{height:5px;border-radius:99px;background:#E1E9F2;margin-top:11px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--azure),var(--azure2) 60%,var(--gold));transition:width .8s var(--ease)}
+
+/* ---------- hero ---------- */
+.hero{padding:26px 4px 6px;animation:rise .6s var(--ease) both}
+.hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:31px;line-height:1.14;margin:0 0 8px;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;background:linear-gradient(92deg,var(--azure),#7C5CFC);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--ink2);font-size:14.5px;margin:0;max-width:52ch}
+.hero .trust{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.tchip{font-size:11.5px;font-weight:600;color:var(--ink2);background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:99px;padding:5px 11px;display:inline-flex;align-items:center;gap:6px}
+.tchip svg{width:12px;height:12px;stroke:var(--ok)}
+
+/* ---------- steps ---------- */
+.steps{margin-top:20px;display:flex;flex-direction:column;gap:14px}
+.step{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .35s var(--ease),border-color .35s var(--ease)}
+.step.active{box-shadow:var(--shadow-lg);border-color:#C9D9F2}
+.step.locked{opacity:.62}
+.shead{display:flex;align-items:center;gap:12px;width:100%;padding:16px 18px;background:none;border:0;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.snode{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:14px;color:var(--mut);background:#EDF1F7;border:2px solid #EDF1F7;transition:all .35s var(--ease)}
+.step.active .snode{background:var(--azure);border-color:var(--azure);color:#fff;box-shadow:0 4px 12px -3px rgba(37,99,235,.5)}
+.step.done .snode{background:var(--ok);border-color:var(--ok);color:#fff}
+.snode svg{width:16px;height:16px}
+.stitle{font-weight:700;font-size:16px;line-height:1.25}
+.ssum{font-size:12.5px;color:var(--mut);font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+.schev{margin-left:auto;color:#A9BCCE;flex:none;transition:transform .35s var(--ease)}
+.step.active .schev{transform:rotate(180deg)}
+.sbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease)}
+.sbody>div{overflow:hidden;min-height:0}
+.step.active .sbody{grid-template-rows:1fr}
+.sin{padding:2px 18px 20px;animation:fadein .4s var(--ease) both}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.lede{font-size:13.5px;color:var(--ink2);margin:0 0 14px}
+.lede b{color:var(--ink)}
+
+/* ---------- forms ---------- */
+label.fl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);display:block;margin:14px 0 6px}
+label.fl:first-child{margin-top:2px}
+input[type=text],input[type=month],input[type=date],input[type=number],input[type=password],select,textarea{
+  width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:var(--r-md);font-size:15.5px;font-family:inherit;background:#FBFCFE;color:var(--ink);transition:border-color .2s,box-shadow .2s;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--azure);box-shadow:0 0 0 4px rgba(37,99,235,.13);background:#fff}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2364798E' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+
+/* ---------- drop zones ---------- */
+.drop{display:flex;align-items:center;gap:13px;border:1.8px dashed #B9CCE8;border-radius:var(--r-md);padding:15px 16px;cursor:pointer;background:linear-gradient(180deg,#F8FBFF,#F1F6FE);transition:all .25s var(--ease)}
+.drop:hover,.drop:active{border-color:var(--azure);background:#EDF4FF;transform:translateY(-1px)}
+.drop .dic{width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;flex:none;box-shadow:0 3px 8px -3px rgba(11,27,43,.15)}
+.drop .dic svg{width:21px;height:21px;stroke:var(--azure)}
+.drop b{font-size:14.5px;display:block}
+.drop span{font-size:12.5px;color:var(--mut)}
+.drop input{display:none}
+
+/* ---------- stat chips / summaries ---------- */
+.statrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.stat{flex:1;min-width:104px;background:#F7FAFD;border:1px solid var(--line2);border-radius:var(--r-md);padding:10px 12px}
+.stat span{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);display:block}
+.stat b{font-size:16.5px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.02em}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.info{background:#E7F0FE;color:var(--azure)}
+
+/* ---------- receipts ---------- */
+.rcard{display:flex;gap:13px;border:1px solid var(--line);border-radius:var(--r-md);padding:13px;margin-top:11px;background:#fff}
+.rcard .thumb{width:74px;height:92px;object-fit:cover;border-radius:9px;border:1px solid var(--line);flex:none;background:#F1F4F9}
+.rcard .nothumb{width:74px;height:92px;border-radius:9px;flex:none;background:linear-gradient(150deg,#EDF3FB,#FDF3D7);display:grid;place-items:center;border:1px solid var(--line)}
+.rcard .nothumb svg{width:26px;height:26px;stroke:#9DB4CC}
+.rmeta{flex:1;min-width:0}
+.rmeta .rname{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rmeta .rsub{font-size:12px;color:var(--mut)}
+.shimmer{position:relative;overflow:hidden;background:#EDF1F7;border-radius:8px;height:13px;margin-top:8px}
+.shimmer::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:shim 1.2s infinite}
+@keyframes shim{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.itemsline{font-size:12px;color:var(--ink2);margin-top:7px;line-height:1.55}
+.sumcheck{font-size:12px;font-weight:600;margin-top:5px}
+.sumcheck.good{color:var(--ok)} .sumcheck.off{color:var(--bad)}
+.etims{display:flex;gap:9px;align-items:flex-start;margin-top:11px;font-size:12.5px;color:var(--ink2);cursor:pointer;line-height:1.4}
+.etims input{width:19px;height:19px;accent-color:var(--azure);flex:none;margin:1px 0 0}
+.err{font-size:12.5px;color:var(--bad);font-weight:600;margin-top:7px}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:12px 18px;font-size:14.5px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s var(--ease);background:var(--azure);color:#fff;box-shadow:0 8px 18px -8px rgba(37,99,235,.55)}
+.btn:active{transform:scale(.975)}
+.btn:disabled{opacity:.45;box-shadow:none;cursor:default}
+.btn.gold{background:linear-gradient(135deg,#F6CD63,var(--gold));color:#231a02;box-shadow:0 8px 18px -8px rgba(184,134,11,.6)}
+.btn.ghost{background:#fff;color:var(--azure);border:1.5px solid #C7D8F5;box-shadow:none}
+.btn.sm{padding:9px 14px;font-size:13.5px;border-radius:10px}
+.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+
+/* ---------- questions ---------- */
+.qcard{border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:var(--r-md);padding:14px 15px;margin-top:11px;background:linear-gradient(180deg,#FFFDF6,#fff)}
+.qcard.answered{border-left-color:var(--ok);background:#fff}
+.qamt{font-family:'Fraunces',serif;font-size:21px;font-weight:700}
+.qline{font-size:13px;color:var(--ink2);margin-top:2px}
+.qline .det{color:var(--ink);font-weight:600}
+.cats{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.cat{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--ink2);transition:all .18s var(--ease)}
+.cat:active{transform:scale(.96)}
+.cat.sel{background:var(--azure);border-color:var(--azure);color:#fff;box-shadow:0 5px 12px -5px rgba(37,99,235,.6)}
+.cat.sel.personal{background:#fff;border-color:var(--bad);color:var(--bad);box-shadow:none}
+.notice{display:flex;gap:10px;border-radius:var(--r-md);padding:12px 14px;font-size:13px;margin-top:11px;line-height:1.5}
+.notice svg{width:17px;height:17px;flex:none;margin-top:1px}
+.notice.warn{background:var(--warn-bg);color:#6d5205}.notice.warn svg{stroke:var(--warn)}
+.notice.info{background:#EAF2FE;color:#17457e}.notice.info svg{stroke:var(--azure)}
+.notice.bad{background:var(--bad-bg);color:#7c241e}.notice.bad svg{stroke:var(--bad)}
+
+/* ---------- pack ---------- */
+.packhero{border-radius:var(--r-lg);padding:22px 20px 18px;color:#EAF2FF;background:linear-gradient(150deg,#0A2540,#123a6e 55%,#1D4ED8);position:relative;overflow:hidden;box-shadow:var(--shadow-lg)}
+.packhero::after{content:"";position:absolute;width:340px;height:340px;border-radius:50%;right:-120px;top:-160px;background:radial-gradient(circle,rgba(242,193,78,.35),transparent 65%)}
+.packhero .plabel{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9CC2FF}
+.packhero .pbig{font-family:'Fraunces',serif;font-size:46px;font-weight:700;line-height:1.05;margin:5px 0 2px;font-variant-numeric:tabular-nums}
+.packhero .psub{font-size:13px;color:#BFD6F7}
+.packhero .pmeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.packhero .pill{background:rgba(255,255,255,.13);color:#DCE9FF;border:1px solid rgba(255,255,255,.16)}
+.packhero .pill.good{background:rgba(62,207,142,.18);color:#8CF0BC;border-color:rgba(62,207,142,.3)}
+.packhero .pill.alert{background:rgba(242,93,78,.2);color:#FFB4A8;border-color:rgba(242,93,78,.35)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;box-shadow:var(--shadow)}
+.tile span{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);display:block}
+.tile b{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tile small{display:block;font-size:11.5px;color:var(--mut);margin-top:2px;line-height:1.45}
+.meter{height:8px;border-radius:99px;background:#E8EEF5;overflow:hidden;margin-top:9px}
+.meter i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--azure2),var(--azure));transition:width 1s var(--ease)}
+.meter i.hot{background:linear-gradient(90deg,#F2C14E,#E2574C)}
+.splitbar{display:flex;height:10px;border-radius:99px;overflow:hidden;margin-top:9px;background:#F3E3BC}
+.splitbar i{display:block;height:100%;background:var(--ok);transition:width 1s var(--ease)}
+.doc{background:#FFF;border:1px solid var(--line);border-radius:var(--r-md);margin-top:12px;overflow:hidden}
+.doc summary{cursor:pointer;padding:13px 16px;font-weight:700;font-size:14px;list-style:none;display:flex;align-items:center;gap:8px}
+.doc summary::-webkit-details-marker{display:none}
+.doc summary svg{width:15px;height:15px;stroke:var(--mut);transition:transform .3s var(--ease)}
+.doc[open ] summary svg{transform:rotate(180deg)}
+.doc pre{white-space:pre-wrap;font-size:12px;line-height:1.65;background:#FBFCFE;border-top:1px solid var(--line2);color:var(--ink2);padding:15px 16px;margin:0;font-family:ui-monospace,'SF Mono',Menlo,monospace;overflow-x:auto}
+
+/* ---------- gate / setup / misc ---------- */
+.gatecard{max-width:420px;margin:9vh auto 0;background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);padding:28px 24px;text-align:center;animation:rise .5s var(--ease) both}
+.gatecard .mark{margin:0 auto 14px;width:52px;height:52px;border-radius:16px}
+.gatecard .mark svg{width:31px;height:31px}
+.gatecard h2{font-family:'Fraunces',serif;margin:0 0 5px;font-size:24px}
+.gatecard p{color:var(--mut);font-size:13.5px;margin:0 0 16px}
+.gatecard input{text-align:center}
+.setupbar{display:flex;gap:10px;background:#FFF8E1;border:1px solid #F0DCA0;border-radius:var(--r-md);padding:12px 14px;font-size:13px;color:#6d5205;margin-top:16px;line-height:1.5}
+.setupbar svg{width:17px;height:17px;flex:none;stroke:var(--gold-d);margin-top:1px}
+.hidden{display:none!important}
+.matchline{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+.matchline:last-child{border-bottom:0}
+.matchline .amt{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:8px}
+.foot{margin-top:22px;text-align:center}
+.foot button{background:none;border:0;color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:10px}
+.foot .tiny{font-size:11.5px;color:#9DB0C3;margin-top:2px}
+
+/* ---------- bottom action bar ---------- */
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:50;padding:11px 16px calc(11px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);
+  transform:translateY(110%);transition:transform .45s var(--ease)}
+#bar.show{transform:none}
+#bar .bin{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:12px}
+#bar .btext{flex:1;min-width:0}
+#bar .btext b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar .btext span{font-size:12px;color:var(--mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar .btn{flex:none;padding:13px 20px;border-radius:13px}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,16px);z-index:60;background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;padding:11px 18px;border-radius:99px;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:all .35s var(--ease);max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+<header>
+  <div class="hrow">
+    <div class="mark"><svg viewBox="0 0 48 48" fill="none"><path d="M12 5h24v38l-4-3-4 3-4-3-4 3-4-3-4 3z" fill="rgba(255,255,255,.16)"/><path d="M17.5 24.5l4.8 4.8L31 18.5" stroke="#F2C14E" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 13.5h12" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg></div>
+    <div><div class="hname">Hazi</div><div class="hsub">Hazina's tax agent</div></div>
+    <div class="hbiz"><b id="hBiz">Your business</b><span id="hPeriod">Month-end close</span></div>
+  </div>
+  <div class="progress"><i id="progFill"></i></div>
+</header>
+
+<div id="gate" class="gatecard hidden">
+  <div class="mark"><svg viewBox="0 0 48 48" fill="none"><path d="M12 5h24v38l-4-3-4 3-4-3-4 3-4-3-4 3z" fill="rgba(255,255,255,.16)"/><path d="M17.5 24.5l4.8 4.8L31 18.5" stroke="#F2C14E" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 13.5h12" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg></div>
+  <h2>Welcome back</h2>
+  <p>This workspace is locked. Enter your passcode to open the month.</p>
+  <input id="gatePass" type="password" autocomplete="current-password" placeholder="Passcode">
+  <div style="margin-top:13px"><button id="gateBtn" class="btn" style="width:100%">Unlock Hazi</button></div>
+  <div id="gateMsg" style="font-size:13px;color:var(--bad);font-weight:600;margin-top:9px"></div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="hero">
+    <h1>The month, closed <em>beautifully</em>.</h1>
+    <p>Hand Hazi your M-Pesa statement and the paper receipts from the drawer. Hazi reads every line, matches every shilling, asks only about what it cannot prove — and hands you a filing pack KRA can stand behind.</p>
+    <div class="trust">
+      <span class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke-width="3"><path d="M4 12.5l5 5L20 6.5"/></svg>Nothing invented</span>
+      <span class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke-width="3"><path d="M4 12.5l5 5L20 6.5"/></svg>Photos stay on your phone</span>
+      <span class="tchip"><svg viewBox="0 0 24 24" fill="none" stroke-width="3"><path d="M4 12.5l5 5L20 6.5"/></svg>You file on iTax — Hazi never submits</span>
+    </div>
+  </div>
+
+  <div id="setupNotice" class="setupbar hidden"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg><div id="setupText"></div></div>
+
+  <div class="steps" id="steps"></div>
+
+  <div class="foot">
+    <button id="resetBtn">Start a new month</button>
+    <div class="tiny">Hazi prepares — a human files. Figures come from the rules in config, never from the model.</div>
+  </div>
+</div>
+
+</div>
+<div id="bar"><div class="bin"><div class="btext"><b id="barTitle"></b><span id="barSub"></span></div><button class="btn gold" id="barBtn"></button></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+// ---- rules, mirrored from config/ (the model never supplies a rate) ----
+const TOT_RATES=[{from:"2020-01-01",to:"2023-06-30",rate:0.01},{from:"2023-07-01",to:"2024-12-26",rate:0.03},{from:"2024-12-27",to:"9999-12-31",rate:0.015}];
+const BANDS=[{up:24000,r:0.10},{up:32333,r:0.25},{up:500000,r:0.30},{up:800000,r:0.325},{up:Infinity,r:0.35}];
+const RELIEF_MO=28800/12, VAT_THRESHOLD=5000000;
+const CATS=[["supplies","Supplies"],["wages","Wages"],["rent","Rent"],["transport","Transport"],["other","Other"],["personal","Personal — not a business cost"]];
+const $=id=>document.getElementById(id);
+const fmt=n=>"KSh "+Number(n||0).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0=n=>"KSh "+Math.round(Number(n||0)).toLocaleString("en-KE");
+let S={business:"",period:"",legalForm:"sole_trader",stream:"trading",txns:[],receipts:[],matches:[],questions:[],results:null,reconciled:false,step:1};
+let modelKey=false, toastTimer=null;
+function save(){try{const c=JSON.parse(JSON.stringify(S));c.receipts=c.receipts.map(r=>{const x={...r};delete x.dataUrl;return x;});localStorage.setItem("hazi_run_v2",JSON.stringify(c));}catch(e){}}
+function load(){try{const raw=localStorage.getItem("hazi_run_v2");if(raw){S=JSON.parse(raw);return;}
+  const old=localStorage.getItem("hazi_run_v1");if(old){const o=JSON.parse(old);S={...S,...o,reconciled:(o.matches||[]).length>0||(o.questions||[]).length>0,step:1};}}catch(e){}}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2600);}
+function monthName(p){if(!p)return "Month-end close";const d=new Date(p+"-02T00:00:00");return isNaN(d)?p:d.toLocaleDateString("en-KE",{month:"long",year:"numeric"});}
+
+// ---- statement parsing (header hunt, like the reference parser) ----
+function parseCSV(text){
+  const rows=[];let row=[],cur="",q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}
+    else if(c==='"')q=true; else if(c===","){row.push(cur);cur="";}
+    else if(c==="\n"){row.push(cur);rows.push(row);row=[];cur="";}
+    else if(c!=="\r")cur+=c;}
+  if(cur||row.length){row.push(cur);rows.push(row);}
+  return rows;
+}
+function amt(t){const v=parseFloat(String(t||"").replace(/,/g,""));return isNaN(v)?0:Math.abs(v);}
+function parseStatement(text){
+  const rows=parseCSV(text);let hi=-1;
+  for(let i=0;i<rows.length;i++){const j=rows[i].join(" ").toLowerCase();if(j.includes("receipt")&&j.includes("details")){hi=i;break;}}
+  if(hi<0)throw new Error("That file doesn't look like an M-Pesa statement — the header row wasn't found.");
+  const H=rows[hi].map(c=>c.trim().toLowerCase());
+  const col=(...names)=>{for(const n of names){const k=H.indexOf(n);if(k>=0)return k;}for(const n of names){for(let k=0;k<H.length;k++)if(H[k].includes(n))return k;}return -1;};
+  const cR=col("receipt no","receipt"),cT=col("completion time","date"),cD=col("details"),
+        cI=col("paid in","credit"),cO=col("withdrawn","paid out","debit"),cB=col("balance");
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){const r=rows[i];if(!r||r.every(c=>!String(c).trim()))continue;
+    const pin=cI>=0?amt(r[cI]):0,pout=cO>=0?amt(r[cO]):0;if(!pin&&!pout)continue;
+    out.push({id:"txn-"+String(out.length+1).padStart(4,"0"),date:String(r[cT]||"").slice(0,10),
+      details:String(r[cD]||""),receipt:String(r[cR]||""),amount:pin||pout,dir:pin?"in":"out",
+      business:true,category:null});}
+  if(!out.length)throw new Error("The statement was read, but no money lines were found in it.");
+  return out;
+}
+
+// ---- matching: amount exact + date within 3 days, one-to-one ----
+function dgap(a,b){const da=Date.parse(a),db=Date.parse(b);if(isNaN(da)||isNaN(db))return null;return Math.abs(da-db)/86400000;}
+function reconcile(){
+  const outs=S.txns.filter(t=>t.dir==="out");const used=new Set();S.matches=[];S.questions=[];
+  const rc=S.receipts.filter(r=>r.status==="confirmed");
+  for(const r of rc){let best=null,bestGap=99;
+    for(const o of outs){if(used.has(o.id)||Math.abs(o.amount-r.amount)>0.5)continue;const g=dgap(r.date,o.date);if(g!==null&&g<=3&&g<bestGap){best=o;bestGap=g;}}
+    if(best){used.add(best.id);S.matches.push({receiptId:r.id,txnId:best.id,basis:"amount exact, "+bestGap+"d apart"});r.matchedTxn=best.id;r.nearMiss=null;}
+    else{r.matchedTxn=null;r.nearMiss=null;
+      for(const o of outs){if(Math.abs(o.amount-r.amount)<=0.5){const g=dgap(r.date,o.date);if(g!==null&&g>3){r.nearMiss={date:o.date,gap:g};break;}}}}}
+  for(const o of outs){if(!used.has(o.id))S.questions.push({txnId:o.id,status:"open",
+    text:fmt(o.amount)+" out on "+o.date+" — “"+o.details+"”. Was this a business cost? Choose below — or mark it personal.",
+    answer:null,category:null});}
+  S.reconciled=true;
+}
+
+// ---- rules ----
+function totRate(period){const d=(period||"2026-01")+"-31";for(const e of TOT_RATES)if(d>=e.from&&d<=e.to)return e.rate;return 0.015;}
+function graduated(profit){if(profit<=0)return 0;let tax=0,lo=0;for(const b of BANDS){if(profit>lo)tax+=(Math.min(profit,b.up)-lo)*b.r;lo=b.up;if(profit<=b.up)break;}return Math.max(tax-RELIEF_MO,0);}
+function compute(){
+  const gross=S.txns.filter(t=>t.dir==="in").reduce((s,t)=>s+t.amount,0);
+  const rate=totRate(S.period),tot=gross*rate;
+  let expenses=0,etimsBacked=0;
+  for(const t of S.txns){if(t.dir!=="out"||t.business===false)continue;expenses+=t.amount;}
+  for(const r of S.receipts){if(r.status!=="confirmed")continue;
+    if(r.matchedTxn){if(r.etims)etimsBacked+=r.amount;}
+    else{expenses+=r.amount;if(r.etims)etimsBacked+=r.amount;}}
+  const profit=gross-expenses;
+  const std=S.legalForm==="limited_company"?Math.max(profit,0)*0.30:graduated(profit);
+  const annualised=gross*12;
+  return {gross,rate,tot,expenses,profit,std,annualised,
+    vatMust:annualised>=VAT_THRESHOLD,etimsBacked,etimsPaper:expenses-etimsBacked};
+}
+function packText(R){
+  const L=["# Filing pack — "+S.business+" — "+S.period,"","Prepared by Hazi (Hazina). A human files on iTax; Hazi never submits.","","## Turnover Tax",
+  "- Gross sales: "+fmt(R.gross),"- Rate: "+(R.rate*100).toFixed(1)+"% (config: TOT rate history)","- **TOT payable: "+fmt(R.tot)+"**","- Due: 20th of the following month; nil months still file.","","## Regime comparison (indicative)",
+  "- Profit: "+fmt(R.profit)+" · Standard estimate: "+fmt(R.std)+" · Cheaper this month: "+(R.tot<=R.std?"TOT":"standard"),"","## VAT registration watch",
+  "- Annualised taxable supplies: "+fmt(R.annualised)+" vs threshold "+fmt(VAT_THRESHOLD)+" — must register: "+(R.vatMust?"YES":"not yet"),"","## eTIMS expense split",
+  "- eTIMS-backed: "+fmt(R.etimsBacked)+" · Paper-only (would be disallowed): "+fmt(R.etimsPaper)];
+  const open=S.questions.filter(q=>q.status==="open");
+  L.push("","## Questions");if(!S.questions.length)L.push("- None — every line was evidenced.");
+  for(const q of S.questions)L.push("- ["+(q.status==="answered"?"answered":"open")+"] "+q.text+(q.answer?" → "+q.answer:""));
+  if(open.length)L.push("Open questions remain — the pack carries them as flags.");
+  L.push("","## Evidence");
+  L.push("- Every figure traces to this run's record: documents are SHA-256 hashed, decisions are hash-stamped in the record.");
+  return L.join("\n")+"\n";
+}
+function totCSV(R){return "section,field,value\nA_return_information,taxpayer_pin,\nA_return_information,type_of_return,Original\nA_return_information,return_period,"+S.period+"\nD_turnover_and_tax,gross_monthly_turnover,"+R.gross.toFixed(2)+"\nD_turnover_and_tax,tot_rate,"+R.rate+"\nD_turnover_and_tax,tot_payable,"+R.tot.toFixed(2)+"\n";}
+function download(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+
+// ---- step model ----
+function stepDone(n){
+  if(n===1)return !!(S.business.trim()&&S.period);
+  if(n===2)return S.txns.length>0;
+  if(n===3)return S.receipts.some(r=>r.status==="confirmed");
+  if(n===4)return !!S.reconciled;
+  if(n===5)return !!S.results;
+  return false;
+}
+function furthest(){let f=1;for(let n=1;n<=5;n++){if(stepDone(n))f=n+1;else break;}return Math.min(f,5);}
+function progressPct(){let p=0;const w=[15,25,25,20,15];for(let n=1;n<=5;n++)if(stepDone(n))p+=w[n-1];return p;}
+function openCount(){return S.questions.filter(q=>q.status==="open").length;}
+function confirmedCount(){return S.receipts.filter(r=>r.status==="confirmed").length;}
+function gotoStep(n){S.step=Math.max(1,Math.min(5,n));save();render();
+  const el=$("step"+S.step);if(el)setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),60);}
+
+// ---- rendering ----
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+const CHEV='<svg class="schev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+const WARN='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 3.5L22 20H2z"/><path d="M12 10v4.5M12 17.4v.4"/></svg>';
+const INFO='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.4"/></svg>';
+const UP='<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7 9.5L12 4.5l5 5"/><path d="M4 19.5h16"/></svg>';
+const CAM='<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg>';
+const DOC='<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7L19 8v12.5H7z"/><path d="M14 3.5V8h5"/></svg>';
+const STEPS=[
+ {n:1,t:"The business",hint:"Whose month is this?"},
+ {n:2,t:"The statement",hint:"The month's M-Pesa record"},
+ {n:3,t:"The paper",hint:"Receipts & invoices, photographed"},
+ {n:4,t:"Reconcile & answer",hint:"Every shilling, accounted for"},
+ {n:5,t:"The pack",hint:"Figures, watches & the filing pack"}];
+function dueDate(){if(!S.period)return "";const d=new Date(S.period+"-01T00:00:00");d.setMonth(d.getMonth()+1);return "20 "+d.toLocaleDateString("en-KE",{month:"short",year:"numeric"});}
+function stepSummary(n){
+  if(n===1)return stepDone(1)?esc(S.business)+" · "+monthName(S.period):"Name, month, legal form";
+  if(n===2){if(!S.txns.length)return "Add the M-Pesa CSV";const ins=S.txns.filter(t=>t.dir==="in").reduce((s,t)=>s+t.amount,0),outs=S.txns.filter(t=>t.dir==="out").reduce((s,t)=>s+t.amount,0);return S.txns.length+" lines · in "+fmt0(ins)+" · out "+fmt0(outs);}
+  if(n===3){if(!S.receipts.length)return "Photograph each receipt";return S.receipts.length+" added · "+confirmedCount()+" confirmed";}
+  if(n===4){if(!S.reconciled)return "Match receipts, answer what's left";return S.matches.length+" matched · "+(S.questions.length-openCount())+" answered · "+openCount()+" open";}
+  if(n===5)return S.results?"TOT "+fmt(S.results.tot)+" · due "+dueDate():"Your filing pack appears here";
+  return "";}
+function paintChrome(){
+  $("hBiz").textContent=S.business.trim()||"Your business";
+  $("hPeriod").textContent=S.period?monthName(S.period):"Month-end close";
+  $("progFill").style.width=progressPct()+"%";
+  renderBar();
+}
+function render(){
+  $("hBiz").textContent=S.business.trim()||"Your business";
+  $("hPeriod").textContent=S.period?monthName(S.period):"Month-end close";
+  $("progFill").style.width=progressPct()+"%";
+  const f=furthest();
+  $("steps").innerHTML=STEPS.map(st=>{
+    const done=stepDone(st.n),active=S.step===st.n,locked=st.n>f&&!done;
+    return "<section class='step"+(active?" active":"")+(done?" done":"")+(locked?" locked":"")+"' id='step"+st.n+"'>"+
+    "<button class='shead' data-head='"+st.n+"'><span class='snode'>"+(done?CHECK:st.n)+"</span>"+
+    "<span><span class='stitle'>"+st.t+"</span><div class='ssum'>"+(active?st.hint:stepSummary(st.n))+"</div></span>"+CHEV+"</button>"+
+    "<div class='sbody'><div><div class='sin'>"+stepBody(st.n)+"</div></div></div></section>";}).join("");
+  renderBar();
+  if(S.step===5&&S.results)animateTot();
+}
+function stepBody(n){
+  if(n===1)return "<p class='lede'>Three quick facts set the rules Hazi applies — the tax regime follows from them, never from a guess.</p>"+
+   "<label class='fl'>Business name</label><input type='text' id='biz' placeholder='e.g. Beautify by Angel' value='"+esc(S.business)+"' autocomplete='organization'>"+
+   "<div class='grid2'><div><label class='fl'>Month being closed</label><input type='month' id='period' value='"+esc(S.period)+"'></div>"+
+   "<div><label class='fl'>Legal form</label><select id='legalForm'>"+
+   "<option value='sole_trader'"+(S.legalForm==="sole_trader"?" selected":"")+">Sole trader</option>"+
+   "<option value='limited_company'"+(S.legalForm==="limited_company"?" selected":"")+">Limited company</option>"+
+   "<option value='partnership'"+(S.legalForm==="partnership"?" selected":"")+">Partnership</option></select></div></div>"+
+   "<label class='fl'>Income is mostly</label><select id='stream'>"+
+   "<option value='trading'"+(S.stream==="trading"?" selected":"")+">Trading / services</option>"+
+   "<option value='professional_fees'"+(S.stream==="professional_fees"?" selected":"")+">Professional fees</option>"+
+   "<option value='mixed'"+(S.stream==="mixed"?" selected":"")+">Mixed</option></select>";
+  if(n===2){
+    let h="<p class='lede'>Export the month from M-Pesa as a <b>CSV statement</b> and add it here. Hazi reads the lines itself — <b>nothing is typed by hand</b>, so nothing can be quietly altered.</p>"+
+    "<label class='drop'><span class='dic'>"+UP+"</span><span><b>Add the M-Pesa statement</b><span>CSV export for "+(S.period?monthName(S.period):"the month")+"</span></span><input type='file' id='stmtFile' accept='.csv,text/csv'></label>";
+    if(S.txns.length){const ins=S.txns.filter(t=>t.dir==="in"),outs=S.txns.filter(t=>t.dir==="out");
+      const si=ins.reduce((s,t)=>s+t.amount,0),so=outs.reduce((s,t)=>s+t.amount,0);
+      h+="<div class='statrow'><div class='stat'><span>Lines read</span><b>"+S.txns.length+"</b></div>"+
+      "<div class='stat'><span>Money in · "+ins.length+"</span><b>"+fmt0(si)+"</b></div>"+
+      "<div class='stat'><span>Money out · "+outs.length+"</span><b>"+fmt0(so)+"</b></div></div>"+
+      "<div class='notice info'>"+INFO+"<div>Money in is your <b>gross sales</b> for Turnover Tax. Money out is what the receipts — and your answers — must account for.</div></div>";}
+    return h;}
+  if(n===3){
+    let h="<p class='lede'>Photograph each receipt or invoice. Hazi reads it, <b>you confirm what it read</b> before anything counts. Photos never leave this device.</p>"+
+    "<div class='btnrow' style='margin-top:0'><label class='drop' style='flex:1;min-width:200px'><span class='dic'>"+CAM+"</span><span><b>Photograph receipts</b><span>Camera or photo library</span></span><input type='file' id='rcptFiles' accept='image/*' multiple></label></div>"+
+    "<div id='rcptList'>"+S.receipts.map((r,i)=>receiptCard(r,i)).join("")+"</div>";
+    if(!S.receipts.length)h+="<div class='notice info'>"+INFO+"<div>No paper this month? That's fine — continue, and Hazi will ask you about each payment line instead.</div></div>";
+    return h;}
+  if(n===4)return questionsBody();
+  if(n===5)return packBody();
+  return "";}
+function receiptCard(r,i){
+  let h="<div class='rcard'>";
+  if(r.dataUrl)h+="<img class='thumb' src='"+r.dataUrl+"' alt='Receipt photo'>";
+  else h+="<div class='nothumb'>"+DOC+"</div>";
+  h+="<div class='rmeta'><div class='row' style='display:flex;align-items:center;gap:8px'><span class='rname'>"+esc(r.vendor||r.name)+"</span>"+
+    "<span class='pill "+(r.status==="confirmed"?"ok":r.status==="reading"?"info":"warn")+"'>"+(r.status==="confirmed"?"Confirmed":r.status==="reading"?"Reading…":r.status==="draft"?"Check & confirm":"New")+"</span></div>"+
+    "<div class='rsub'>"+esc(r.name)+"</div>";
+  if(r.status==="reading")h+="<div class='shimmer'></div><div class='shimmer' style='width:62%'></div><div class='rsub' style='margin-top:7px'>Hazi is reading the receipt…</div>";
+  if(r.status==="new"){
+    h+="<div class='btnrow'><button class='btn sm' data-act='read' data-i='"+i+"'>Read receipt</button><button class='btn sm ghost' data-act='manual' data-i='"+i+"'>Enter by hand</button></div>";
+    if(r.error)h+="<div class='err'>"+esc(r.error)+"</div>";}
+  if(r.status==="draft"||r.status==="confirmed"){
+    const dis=r.status==="confirmed"?" disabled":"";
+    h+="<label class='fl'>Vendor</label><input type='text' data-f='vendor' data-i='"+i+"' value='"+esc(r.vendor||"")+"'"+dis+">"+
+    "<div class='grid2'><div><label class='fl'>Date on the receipt</label><input type='date' data-f='date' data-i='"+i+"' value='"+esc(r.date||"")+"'"+dis+"></div>"+
+    "<div><label class='fl'>Total (KSh)</label><input type='number' inputmode='decimal' data-f='amount' data-i='"+i+"' value='"+(r.amount||"")+"'"+dis+"></div></div>";
+    if(r.items&&r.items.length){const sum=r.items.reduce((s,x)=>s+(+x.amount_kes||0),0);const okSum=Math.abs(sum-(+r.amount||0))<=0.5;
+      h+="<div class='itemsline'>"+r.items.map(x=>esc(x.name)+" · "+fmt(x.amount_kes)).join("<br>")+"</div>"+
+      "<div class='sumcheck "+(okSum?"good":"off")+"'>"+(okSum?"Items add up to the total ✓":"Items add to "+fmt(sum)+" — not the total above. Hazi will ask about this one.")+"</div>";}
+    h+="<label class='etims'><input type='checkbox' data-f='etims' data-i='"+i+"'"+(r.etims?" checked":"")+dis+"><span>This is an <b>eTIMS invoice</b> (it carries a control-unit / invoice number) — eTIMS-backed costs stay deductible.</span></label>";
+    if(r.error)h+="<div class='err'>"+esc(r.error)+"</div>";
+    if(r.status==="draft")h+="<div class='btnrow'><button class='btn sm gold' data-act='confirm' data-i='"+i+"'>Confirm — this is what it says</button></div>";
+    else h+="<div class='btnrow'><button class='btn sm ghost' data-act='edit' data-i='"+i+"'>Edit</button>"+(r.matchedTxn?"<span class='pill ok' style='align-self:center'>Matched to a statement line</span>":"")+"</div>";}
+  return h+"</div></div>";}
+function questionsBody(){
+  if(!S.txns.length)return "<p class='lede'>Add the statement first — reconciliation starts from its lines.</p>";
+  if(!S.reconciled)return "<p class='lede'>Hazi compares every <b>confirmed receipt</b> against the statement — amount exact, date within three days, one-to-one. Whatever has no receipt becomes a question only you can answer.</p>"+
+   "<div class='statrow'><div class='stat'><span>Payment lines</span><b>"+S.txns.filter(t=>t.dir==="out").length+"</b></div><div class='stat'><span>Confirmed receipts</span><b>"+confirmedCount()+"</b></div></div>"+
+   "<div class='btnrow'><button class='btn gold' id='reconcileBtn2'>Reconcile the month</button></div>";
+  let h="<div class='notice info'>"+INFO+"<div><b>"+S.matches.length+" receipt"+(S.matches.length===1?"":"s")+" matched</b> to statement lines. "+(openCount()?openCount()+" line"+(openCount()===1?"":"s")+" still need"+(openCount()===1?"s":"")+" your word below.":"Every payment line is accounted for.")+"</div></div>";
+  if(S.matches.length){h+="<div style='margin-top:6px'>"+S.matches.map(m=>{const t=S.txns.find(x=>x.id===m.txnId);const r=S.receipts.find(x=>x.id===m.receiptId);
+    return "<div class='matchline'><span class='pill ok'>Matched</span><span>"+esc((r&&(r.vendor||r.name))||"Receipt")+" → "+esc(t?t.details:"")+"</span><span class='amt'>"+fmt(t?t.amount:0)+"</span></div>";}).join("")+"</div>";}
+  for(const r of S.receipts){if(r.status==="confirmed"&&!r.matchedTxn){
+    h+="<div class='notice warn'>"+WARN+"<div>Receipt <b>“"+esc(r.vendor||r.name)+"”</b> ("+fmt(r.amount)+") matched no statement line."+(r.nearMiss?" A line for the same amount sits on "+r.nearMiss.date+" — "+r.nearMiss.gap+" days from the receipt's date. If the date was entered wrong, edit the receipt and reconcile again.":" It still counts as a cost, carried on the paper evidence alone.")+"</div></div>";}}
+  for(const q of S.questions){const t=S.txns.find(x=>x.id===q.txnId);if(!t)continue;
+    const answered=q.status==="answered";
+    h+="<div class='qcard"+(answered?" answered":"")+"'><div style='display:flex;align-items:baseline;gap:9px'><span class='qamt'>"+fmt(t.amount)+"</span><span class='pill "+(answered?"ok":"warn")+"'>"+(answered?esc(q.category==="personal"?"Personal":q.category):"Needs your word")+"</span></div>"+
+    "<div class='qline'>out on <b>"+esc(t.date)+"</b> — <span class='det'>“"+esc(t.details)+"”</span>. Was this a business cost?</div>"+
+    "<div class='cats'>"+CATS.map(c=>"<button class='cat"+(q.category===c[0]?" sel":"")+(c[0]==="personal"?" personal":"")+"' data-q='"+q.txnId+"' data-cat='"+c[0]+"'>"+c[1]+"</button>").join("")+"</div></div>";}
+  h+="<div class='btnrow'><button class='btn ghost sm' id='reconcileBtn2'>Re-run reconciliation</button></div>";
+  return h;}
+function packBody(){
+  if(!S.results)return "<p class='lede'>Once the month is reconciled, this is where the figures land: Turnover Tax, the standard-regime comparison, the VAT watch, the eTIMS split — and the two files your accountant (or you, on iTax) file from.</p>";
+  const R=S.results;
+  const vatPct=Math.min(100,R.annualised/VAT_THRESHOLD*100),paperPct=R.expenses>0?Math.round(R.etimsPaper/R.expenses*100):0,backedPct=100-paperPct;
+  let h="<div class='packhero'><div class='plabel'>Turnover Tax payable · "+monthName(S.period)+"</div><div class='pbig' id='totBig'>"+fmt(R.tot)+"</div>"+
+   "<div class='psub'>Gross sales "+fmt(R.gross)+" × "+(R.rate*100).toFixed(1)+"% · file &amp; pay by <b style='color:#fff'>"+dueDate()+"</b> — nil months still file.</div>"+
+   "<div class='pmeta'><span class='pill "+(R.vatMust?"alert":"good")+"'>VAT watch: "+(R.vatMust?"registration required":"below threshold")+"</span>"+
+   "<span class='pill'>"+(R.tot<=R.std?"TOT is cheaper this month":"Standard regime looks cheaper")+"</span>"+
+   (openCount()?"<span class='pill alert'>"+openCount()+" open question"+(openCount()===1?"":"s")+" flagged</span>":"<span class='pill good'>Every line evidenced</span>")+"</div></div>";
+  h+="<div class='tiles'>"+
+   "<div class='tile'><span>Gross sales</span><b>"+fmt0(R.gross)+"</b><small>All money in, from the statement itself</small></div>"+
+   "<div class='tile'><span>Business costs</span><b>"+fmt0(R.expenses)+"</b><small>Personal lines excluded on your word</small></div>"+
+   "<div class='tile'><span>Profit for the month</span><b>"+fmt0(R.profit)+"</b><small>Gross minus evidenced costs</small></div>"+
+   "<div class='tile'><span>Standard-regime estimate</span><b>"+fmt0(R.std)+"</b><small>"+(S.legalForm==="limited_company"?"30% company rate on profit":"Graduated bands, less personal relief")+" — shown for comparison</small></div>"+
+   "<div class='tile' style='grid-column:1/-1'><span>VAT registration watch — annualised sales "+fmt0(R.annualised)+" of "+fmt0(VAT_THRESHOLD)+"</span><div class='meter'><i class='"+(vatPct>=80?"hot":"")+"' style='width:"+vatPct.toFixed(1)+"%'></i></div><small>"+(R.vatMust?"You've crossed the threshold — registration is required.":"Crossing KSh 5,000,000 in a year makes VAT registration mandatory. Hazi watches it every month so it never ambushes you.")+"</small></div>"+
+   "<div class='tile' style='grid-column:1/-1'><span>eTIMS split of costs</span><div class='splitbar'><i style='width:"+backedPct+"%'></i></div><small><b style='font-size:11.5px;color:var(--ok)'>"+fmt0(R.etimsBacked)+" eTIMS-backed</b> · <b style='font-size:11.5px;color:var(--warn)'>"+fmt0(R.etimsPaper)+" paper-only</b> — paper-only costs are disallowed when KRA validates against eTIMS.</small></div></div>";
+  h+="<div class='btnrow'><button class='btn' id='dlPack2'>Download the filing pack</button><button class='btn ghost' id='dlCsv2'>tot_values.csv</button></div>";
+  h+="<details class='doc'><summary>"+DOC+" Read the full pack<svg viewBox='0 0 24 24' fill='none' stroke-width='2.4' stroke-linecap='round' style='margin-left:auto'><path d='M6 9l6 6 6-6'/></svg></summary><pre>"+esc(packText(R))+"</pre></details>";
+  return h;}
+let lastTotShown=null;
+function animateTot(){const el=$("totBig");if(!el||!S.results)return;const target=S.results.tot;
+  if(lastTotShown===target){el.textContent=fmt(target);return;}lastTotShown=target;
+  const t0=performance.now(),dur=750;
+  (function tick(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=fmt(target*e);if(p<1)requestAnimationFrame(tick);else el.textContent=fmt(target);})(t0);}
+
+// ---- receipt actions ----
+async function receiptAction(act,i){
+  const r=S.receipts[i];if(!r)return;
+  if(act==="manual"){r.status="draft";r.vendor="";r.date="";r.amount=0;r.items=[];r.error="";save();render();return;}
+  if(act==="edit"){r.status="draft";save();render();return;}
+  if(act==="confirm"){
+    if(!r.amount){r.error="The total is needed — read it off the receipt.";render();return;}
+    if(!r.date){r.error="Add the date printed on the receipt — Hazi matches on amount and date.";render();return;}
+    r.status="confirmed";r.error="";save();render();toast("Receipt confirmed — it can now be matched.");return;}
+  if(act==="read"){
+    if(!modelKey){r.error="Auto-reading is waiting for the API key — enter the receipt by hand for now; the rest of the workflow runs.";render();return;}
+    if(!r.dataUrl){r.error="This photo is from an earlier session and is no longer on the device — re-add it, or enter by hand.";r.status="draft";render();return;}
+    r.status="reading";r.error="";render();
+    try{const resp=await fetch("/api/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:r.dataUrl})});
+      const d=await resp.json();
+      if(!resp.ok){r.status="new";r.error=(d.error||"Read failed")+(d.detail?": "+d.detail:"");render();return;}
+      r.vendor=d.vendor||"";r.date=d.date||"";r.amount=+d.amount_kes||0;r.items=d.items||[];r.status="draft";save();render();toast("Read — check it against the paper, then confirm.");
+    }catch(e){r.status="new";r.error="Network problem reading the receipt.";render();}}
+}
+function doReconcile(){
+  const pending=S.receipts.filter(r=>r.status==="new"||r.status==="draft"||r.status==="reading");
+  if(pending.length&&!confirm(pending.length+" receipt(s) are not confirmed yet — unconfirmed receipts cannot match. Reconcile anyway?"))return;
+  reconcile();S.results=compute();save();render();
+  toast(S.matches.length+" matched · "+S.questions.length+" to answer");
+  gotoStep(4);
+}
+
+// ---- bottom bar ----
+function renderBar(){
+  const bar=$("bar");if($("app").classList.contains("hidden")){bar.classList.remove("show");return;}
+  bar.classList.add("show");
+  const btn=$("barBtn");let title="",sub="",label="",fn=null,dis=false;
+  if(S.step===1){title="The business";sub=stepDone(1)?S.business+" · "+monthName(S.period):"Name, month and legal form";label="Continue";dis=!stepDone(1);fn=()=>gotoStep(2);}
+  else if(S.step===2){title="The statement";sub=S.txns.length?S.txns.length+" lines read":"Add the M-Pesa CSV to continue";label="Continue";dis=!S.txns.length;fn=()=>gotoStep(3);}
+  else if(S.step===3){title="The paper";sub=confirmedCount()?confirmedCount()+" receipt(s) confirmed":"No receipts yet — you can continue without";label="Continue";fn=()=>gotoStep(4);}
+  else if(S.step===4){
+    if(!S.reconciled){title="Reconcile & answer";sub="Match receipts to the statement";label="Reconcile the month";fn=doReconcile;}
+    else{title="Reconcile & answer";sub=openCount()?openCount()+" question(s) still open — they will be flagged in the pack":"Everything is answered";label="See the pack";fn=()=>{S.results=compute();save();gotoStep(5);render();};}
+  }
+  else if(S.step===5){
+    if(S.results){title="The pack";sub="TOT "+fmt(S.results.tot)+" · due "+dueDate();label="Download pack";fn=()=>download("filing-pack-"+(S.period||"month")+".md",packText(S.results||compute()));}
+    else{title="The pack";sub="Reconcile first — the figures appear here";label="Go to reconcile";fn=()=>gotoStep(4);}
+  }
+  $("barTitle").textContent=title;$("barSub").textContent=sub;btn.textContent=label;btn.disabled=dis;
+  btn.onclick=fn?()=>fn():null;
+}
+
+// ---- events (delegated; the steps re-render often) ----
+document.addEventListener("click",e=>{
+  const head=e.target.closest("[data-head]");if(head){const n=+head.dataset.head;if(n<=furthest()||stepDone(n))gotoStep(n);return;}
+  const act=e.target.closest("[data-act]");if(act){receiptAction(act.dataset.act,+act.dataset.i);return;}
+  const cat=e.target.closest("[data-cat]");if(cat){
+    const q=S.questions.find(x=>x.txnId===cat.dataset.q);const t=S.txns.find(x=>x.id===cat.dataset.q);if(!q||!t)return;
+    const c=cat.dataset.cat;q.status="answered";q.category=c;
+    q.answer=c==="personal"?"Merchant: personal, not a business cost.":"Merchant: business — "+c+".";
+    t.category=c;t.business=c!=="personal";
+    if(S.reconciled)S.results=compute();
+    save();render();return;}
+  if(e.target.closest("#reconcileBtn2")){doReconcile();return;}
+  if(e.target.closest("#dlPack2")){download("filing-pack-"+(S.period||"month")+".md",packText(S.results||compute()));return;}
+  if(e.target.closest("#dlCsv2")){download("tot_values.csv",totCSV(S.results||compute()));return;}
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="biz"){S.business=el.value;save();paintChrome();return;}
+  if(el.id==="period"){S.period=el.value;save();paintChrome();return;}
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.id==="biz"||el.id==="period"||el.id==="legalForm"||el.id==="stream"){
+    S.business=$("biz").value;S.period=$("period").value;S.legalForm=$("legalForm").value;S.stream=$("stream").value;save();render();return;}
+  if(el.id==="stmtFile"){const f=el.files[0];if(!f)return;
+    f.text().then(txt=>{try{S.txns=parseStatement(txt);S.matches=[];S.questions=[];S.results=null;S.reconciled=false;save();render();toast("Statement read — "+S.txns.length+" lines.");gotoStep(3);}
+      catch(err){toast(err.message);}});return;}
+  if(el.id==="rcptFiles"){let n=0;for(const f of el.files){const rd=new FileReader();
+    rd.onload=()=>{S.receipts.push({id:"rc-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),name:f.name,dataUrl:rd.result,status:"new",items:[]});n++;save();render();if(n===el.files.length)toast(n+" photo(s) added — read or enter each one.");};
+    rd.readAsDataURL(f);}return;}
+  if(el.dataset&&el.dataset.f){const r=S.receipts[+el.dataset.i];if(!r)return;const fd=el.dataset.f;
+    r[fd]=fd==="amount"?parseFloat(el.value)||0:fd==="etims"?el.checked:el.value;save();render();return;}
+});
+
+// ---- wiring & boot ----
+load();if(!(S.step>=1&&S.step<=5))S.step=1;
+$("resetBtn").onclick=()=>{if(confirm("Start a new month? This clears the run on this device.")){localStorage.removeItem("hazi_run_v2");localStorage.removeItem("hazi_run_v1");location.reload();}};
+$("gateBtn").onclick=async()=>{const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({passcode:$("gatePass").value})});if(r.ok)location.reload();else $("gateMsg").textContent="Wrong passcode — try again.";};
+$("gatePass").addEventListener("keydown",e=>{if(e.key==="Enter")$("gateBtn").click();});
+(async()=>{try{const s=await (await fetch("/api/session")).json();modelKey=s.modelKey;
+  if(s.gate&&!s.authed){$("gate").classList.remove("hidden");$("bar").classList.remove("show");return;}
+  $("app").classList.remove("hidden");
+  const notes=[];
+  if(!s.modelKey)notes.push("receipt auto-reading is waiting for the <b>Meta API key</b> (MODEL_API_KEY) in the Vercel project settings — until then you confirm receipt amounts by hand, and everything else runs fully");
+  if(!s.gate)notes.push("no <b>passcode</b> is set yet (HAZI_PASSCODE) — add one in the Vercel settings to lock this page");
+  if(notes.length){$("setupText").innerHTML="<b>Setup:</b> "+notes.join("; ")+".";$("setupNotice").classList.remove("hidden");}
+  if(S.reconciled&&S.txns.length)S.results=compute();
+  render();
+}catch(e){$("app").classList.remove("hidden");render();}})();
+</script>
+</body>
+</html>
