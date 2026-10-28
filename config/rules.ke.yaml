@@ -1,0 +1,90 @@
+# Kenya tax rules for Hazi (the agent inside Hazina) — MASTER / cross-cutting.
+# Per-profile rule sets live in config/profiles/*.yaml. Output artefact specs
+# live in config/formats.yaml. The model NEVER supplies these numbers; the
+# rules engine reads them here. Researched 2026-10-28 against kra.go.ke, KRA's
+# published OSCU/VSCU specs, PwC/KPMG Kenya and Kenyan practitioner sources —
+# full sourcing in ~/workspace/research_notes/kra-rules-all-sizes-20261028/report.md
+# Rates change with Finance Acts — re-verify before any live filing use.
+# This file is a build aid, not tax advice.
+
+meta:
+  jurisdiction: KE
+  config_version: 2
+  researched_on: 2026-10-28
+  currency: KES
+
+# ---------------------------------------------------------------------------
+# Profile selection (onboarding). A client is ONE income_tax_profile plus any
+# overlays that apply. Never infer the profile from turnover alone: income
+# type (TOT exclusions) and legal form change the answer.
+# ---------------------------------------------------------------------------
+profile_dimensions:
+  legal_form: [sole_trader, partnership, limited_company]
+  income_tax_profile: [micro_standard, tot_band, standard]   # profiles/*.yaml
+  overlays: [vat_registered, employer, withholding_agent]    # profiles/*.yaml
+  onboarding_questions:
+    - legal_form
+    - kra_pin_type                       # individual vs company PIN
+    - expected_annual_turnover_kes
+    - income_streams                     # trading / rental / professional_fees / final_wht_income / mixed
+    - taxable_supplies_rolling_12mo_kes  # VAT test, separate from turnover
+    - vat_registered_on_itax
+    - has_employees
+    - pays_rent_or_professional_fees
+    - accounting_year_end                # companies: deadlines hang off this
+
+# ---------------------------------------------------------------------------
+# Cross-cutting: eTIMS (applies to EVERY profile)
+# ---------------------------------------------------------------------------
+etims:
+  mandatory_for_all_businesses: true
+  effective_from: 2023-09-01            # Finance Act 2023
+  non_vat_onboarding_grace_ended: 2024-03-31
+  expense_without_etims_invoice_deductible: false
+  deductibility_rule_from: 2024-01-01
+  input_vat_requires_etims_invoice: true
+  kra_validates_returns_against_etims_from: 2026-01   # Finance Act 2025 era
+  free_channels: [etims_lite_ussd_*222#, etims_lite_web_ecitizen, etims_online_portal, buyer_initiated_invoicing]
+  failure_to_issue_penalty: "TPA s.86: up to 2x the tax due (verify before quoting to a client)"
+  integration_routes: [oscu, vscu]      # require KRA certification — see formats.yaml
+  hazi_role: >
+    Hazi records sales in eTIMS payload shape and verifies purchase invoices
+    (CU number / QR). Hazi does NOT sign or transmit eTIMS invoices — signing
+    requires a KRA-issued control unit per taxpayer (certification track).
+
+# ---------------------------------------------------------------------------
+# Cross-cutting: penalties (Tax Procedures Act, per KRA Offences & Penalties)
+# ---------------------------------------------------------------------------
+penalties:
+  late_payment: { penalty_rate: 0.05, interest_per_month: 0.01 }   # almost all taxes
+  late_filing:
+    income_tax_individual: { rate: 0.05, floor_kes: 2000 }
+    income_tax_company_or_partnership: { rate: 0.05, floor_kes: 20000 }
+    vat: { rate: 0.05, floor_kes: 10000 }
+    paye: { rate: 0.25, floor_kes: 10000 }
+    turnover_tax: { flat_per_month_kes: 1000 }     # TOT-specific, w.e.f. 2020-04-25
+  tax_amnesty_note: >
+    Finance Act 2026 reinstates amnesty on penalties/interest for periods up
+    to 2025-12-31 if principal is settled by 2026-12-31. Hazi may mention the
+    window; it never promises an outcome.
+
+# ---------------------------------------------------------------------------
+# Filing calendar spine (day-of-month rules; annuals in profile files)
+# ---------------------------------------------------------------------------
+calendar:
+  paye_and_payroll_levies: { due: "9th of following month" }       # PAYE, SHIF, NSSF, AHL
+  monthly_20th: [turnover_tax, vat, withholding_tax, monthly_rental_income]
+  instalment_tax: { trigger_liability_above_kes: 40000, instalments: 4,
+                    due: "20th day of the 4th, 6th, 9th and 12th month of the year of income",
+                    basis: "lower of (prior year tax x 1.10) or current-year estimate",
+                    balance_due: "last day of the 4th month after year-end" }
+
+agent_guardrails:
+  files_on_itax: never            # a human files; Hazi drafts the pack
+  submits_or_signs_anything_to_kra: never   # no filing, no eTIMS signing
+  invent_records_for_gaps: never  # gaps stay visible and flagged
+  rates_from_model_memory: never  # this config tree is the only source of rates
+  applies_tot_to_excluded_income: never     # rental / professional fees / final-WHT income
+  claims_input_vat_without_etims_invoice: never
+  represents_output_as_audited: never
+  promises_amnesty_or_penalty_waiver: never
