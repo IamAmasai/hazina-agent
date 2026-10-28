@@ -1,0 +1,63 @@
+# Profile: standard income tax — above the TOT band (> KSh 25,000,000), OR
+# elected out of TOT, OR income is TOT-excluded (professional fees etc.).
+# Tax on PROFIT. Expenses deductible only if wholly/exclusively for the
+# business AND supported by eTIMS invoices (from 2024-01-01).
+
+profile: standard
+applies_when:
+  any_of:
+    - annual_gross_turnover_kes: { gt: 25000000 }
+    - elected_out_of_tot: true
+    - income_streams_include: [professional_fees, management_fees, training_fees]
+
+individual:                       # sole trader / partner
+  tax_base: profit
+  bands_monthly:                  # same graduated bands as micro_standard.yaml
+    - { up_to_kes: 24000, rate: 0.10 }
+    - { up_to_kes: 32333, rate: 0.25 }
+    - { up_to_kes: 500000, rate: 0.30 }
+    - { up_to_kes: 800000, rate: 0.325 }
+    - { up_to_kes: null, rate: 0.35 }
+  personal_relief_per_year_kes: 28800
+  return: { form: IT1, due: "30 June following the year of income" }
+
+partnership:
+  return: { form: IT2P, due: "within 6 months after year-end" }   # partners declare shares individually
+
+company:
+  tax_rate: 0.30                  # resident companies
+  special_rates_exist: [epz, sez, newly_listed]   # flag and refer out; never apply 0.30 blindly
+  branch_rate: verify             # sources disagree (30% vs legacy 37.5%) — do not compute branch tax
+  return: { form: IT2C, due: "within 6 months after accounting year-end" }
+  balance_due: "last day of the 4th month after year-end"   # payment BEFORE the return deadline
+  audited_accounts: >
+    Companies Act 2015: financial statements required, audit unless the
+    company qualifies for small/dormant audit exemption. IT2C must reconcile
+    to the financial statements. Hazi output is bookkeeping, never "audited".
+
+instalment_tax:
+  applies_if_liability_above_kes: 40000
+  instalments: 4
+  due: "20th day of the 4th, 6th, 9th and 12th month of the year of income"
+  basis: "lower of (prior year tax x 1.10) or current-year estimate"
+  reestimate_each_instalment: true    # under-estimation attracts interest (s.94)
+
+penalties:
+  late_filing_individual: { rate: 0.05, floor_kes: 2000 }
+  late_filing_company_or_partnership: { rate: 0.05, floor_kes: 20000 }
+  late_payment: { rate: 0.05, interest_per_month: 0.01 }
+
+hazi:
+  compute:
+    - profit_and_loss_from_etims_flagged_records
+    - tax_estimate (bands or 0.30)
+    - instalment_schedule_with_reestimation
+    - balance_of_tax_date_from_actual_year_end
+  watch:
+    - instalment_underestimation
+    - payment_deadline (4th month) arriving before return deadline (6th month)
+    - owner_withdrawals_from_company — classify salary / dividend / loan, never "expenses"
+    - dividend_payments — 5% resident WHT (final) — see withholding_overlay
+  never:
+    - file_figures_that_dont_tie_to_financial_statements_without_flagging
+    - treat_company_and_owner_as_one_taxpayer
