@@ -29,6 +29,8 @@ def main():
     ap.add_argument("--business", required=True)
     ap.add_argument("--period", required=True, help="YYYY-MM")
     ap.add_argument("--profile", default="tot_band")
+    ap.add_argument("--receipts", default=None,
+                    help="directory of receipt images to extract and match")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -49,6 +51,23 @@ def main():
                 f"has no clear description ('{txn['details']}'). What was it for?")
     rec.log("agent", "statement_ingested", f"{len(txns)} transactions from sha={sha[:12]}")
 
+    match_stats = None
+    if args.receipts:
+        from agent.match import match_receipts
+        from agent.tools import extract_receipt
+        images = sorted(
+            os.path.join(args.receipts, f) for f in os.listdir(args.receipts)
+            if f.lower().endswith((".png", ".jpg", ".jpeg")))
+        for image in images:
+            result = extract_receipt.run({"record": rec}, {"path": image})
+            if "error" in result:
+                print(f"extract FAILED {os.path.basename(image)}: {result['error']}")
+        match_stats = match_receipts(rec)
+        rec.log("verification", "matching_done",
+                f"{len(match_stats['matched'])} matched, "
+                f"{len(match_stats['unmatched_receipts'])} receipts unmatched, "
+                f"{len(match_stats['unmatched_statement'])} statement lines unmatched")
+
     period_last_day = f"{args.period}-31"
     tot = rules.compute_tot(rec.transactions(), profile_cfg, period_last_day)
     rec.data["decisions"].append({
@@ -57,7 +76,11 @@ def main():
         "actor": "verification", "attestation_id": None})
     write_pack(args.out, rec.data, tot)
     rec.save(os.path.join(args.out, "record.json"))
-    print(f"transactions: {len(txns)}")
+    print(f"transactions: {len(rec.transactions())}")
+    if match_stats:
+        print(f"receipts matched to statement lines: {len(match_stats['matched'])}")
+        print(f"receipts unmatched: {len(match_stats['unmatched_receipts'])}; "
+              f"statement lines unmatched: {len(match_stats['unmatched_statement'])}")
     print(f"gross sales:  KSh {tot['gross_sales_kes']:,.2f}")
     print(f"TOT payable:  KSh {tot['tot_payable_kes']:,.2f} at {tot['rate'] * 100:.1f}%")
     print(f"open questions: {sum(1 for q in rec.data['questions'] if q['status'] == 'open')}")
