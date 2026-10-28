@@ -1,0 +1,63 @@
+# Profile: Turnover Tax band — KSh 1,000,000 < annual gross turnover <= 25,000,000.
+# s.12C Income Tax Act. Tax on GROSS sales; final tax; no deductions.
+
+profile: tot_band
+applies_when:
+  resident: true
+  annual_gross_turnover_kes: { gt: 1000000, lte: 25000000 }
+  income_streams_exclude_all_of: []   # any excluded stream is carved out, see below
+
+rate_history:                     # sources disagree because the rate moved — use effective dates
+  - { rate: 0.01,  from: 2020-01-01, to: 2023-06-30, source: "Finance Act 2019 reintroduction" }
+  - { rate: 0.03,  from: 2023-07-01, to: 2024-12-26, source: "Finance Act 2023 (band ceiling also cut 50M -> 25M)" }
+  - { rate: 0.015, from: 2024-12-27, to: null,       source: "Tax Laws (Amendment) Act 2024; KRA TOT page read Oct 2026" }
+rate: 0.015                       # current — 1.5% of gross monthly sales
+
+filing:
+  frequency: monthly
+  due: "20th day of the following month"
+  channel: itax_or_kra_m_service_app
+  nil_return_required: true       # zero-sales months still filed, until deregistered
+  artefact: tot_companion_pack    # see config/formats.yaml
+
+expenses_deductible: false
+annual_income_tax_return_on_tot_income: false   # TOT is final on that income
+
+excluded_income:                  # taxed under standard/other regimes, NEVER in the TOT base
+  - rental_income                 # own regime (residential MRI 7.5% etc.)
+  - management_fees
+  - professional_fees
+  - training_fees
+  - income_subject_to_final_withholding_tax   # e.g. qualifying dividends/interest
+  - employment_income
+  - non_resident_income
+
+election_out:
+  available: true
+  method: written_notice_to_the_commissioner_on_itax
+  effect: standard_income_tax_applies
+  hazi_role: model_both_regimes_and_draft_the_letter — the client signs and submits
+
+company_eligibility:
+  status: disputed_in_sources     # most practitioner guides + s.12C "resident persons" say eligible; one major calculator excludes limited companies
+  verify_on_itax: true
+
+penalties:
+  late_filing: { flat_per_month_kes: 1000 }
+  late_payment: { rate: 0.05, interest_per_month: 0.01 }
+
+hazi:
+  compute:
+    - monthly_gross_sales_eligible_streams_only
+    - tot_payable = gross * rate_for_period
+    - rolling_12mo_turnover (band ceiling + VAT threshold watch)
+    - regime_comparison_vs_standard (for the election conversation)
+  watch:
+    - annualised_turnover_approaching 25000000 — forced exit to standard regime
+    - taxable_supplies_approaching_vat_threshold — see vat_overlay.yaml (dual obligations)
+    - excluded_income_leaking_into_tot_base
+    - unfiled_nil_months_accruing_penalties
+  never:
+    - deduct_expenses_in_a_tot_computation
+    - file_the_election_out_notice
+    - move_the_client_off_tot_in_the_books_before_itax_obligation_changes
