@@ -1,0 +1,52 @@
+# Overlay: VAT-registered (runs ALONGSIDE any income-tax profile).
+# VAT Act 2013 s.34. Independent of TOT: a TOT client who crosses the VAT
+# threshold carries BOTH obligations (both monthly, both by the 20th).
+
+overlay: vat_registered
+registration:
+  threshold_taxable_supplies_kes: 5000000
+  test: "any rolling 12 months, actual OR reasonably expected (signed contracts count)"
+  counts: taxable_supplies_only   # standard-rated + zero-rated; exempt supplies do not count
+  apply_within_days_of_liability: 30
+  voluntary_registration_below_threshold: allowed_with_kra_approval
+  late_registration_penalty: { rate: 0.05, floor_kes: 10000 }
+  threshold_abolition_proposed_not_enacted: true   # MTRS proposal — never warn as if it were law
+
+rates:
+  standard: 0.16
+  zero_rated: 0.00                # exports + specified goods; input VAT still claimable
+  exempt: null                    # no VAT charged; input VAT NOT claimable
+
+filing:
+  form: VAT3
+  frequency: monthly
+  due: "20th day of the following month"
+  nil_return_required: true
+  artefact: vat_annex_csvs        # auto-populated from eTIMS by KRA — see formats.yaml
+
+input_vat:
+  requires_etims_invoice: true    # no eTIMS invoice = no claim; absent from pre-populated return until supplier corrects
+  mixed_supplies: apportion_common_input_tax
+
+withholding_vat:
+  note: appointed agents withhold 2% on taxable supplies; appears as WHVAT credit in the return
+  failure_to_deduct_penalty_rate: 0.10
+
+penalties:
+  late_filing: { rate: 0.05, floor_kes: 10000 }
+  late_payment: { rate: 0.05, interest_per_month: 0.01 }
+
+hazi:
+  compute:
+    - output_vat_by_rate_class_from_etims_sales
+    - claimable_input_vat_from_etims_supported_purchases_only
+    - net_vat_payable_or_credit
+    - rolling_12mo_taxable_supplies_actual_and_projected
+  watch:
+    - threshold_approach (actual and projected)
+    - supplier_invoices_missing_from_etims — input VAT at risk
+    - sales_recorded_but_never_etims_invoiced — output VAT exposure
+  never:
+    - claim_input_vat_on_a_non_etims_purchase
+    - backdate_a_registration_effective_date
+    - net_exempt_supply_input_tax_without_apportionment
