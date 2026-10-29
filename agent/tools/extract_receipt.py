@@ -3,8 +3,9 @@
 Registers the document by hash, returns the cached extraction if this record
 has seen the document before, otherwise calls Muse Spark vision. The
 extraction is cross-checked in code before it counts: line items must sum to
-the receipt total. A mismatch lowers confidence and becomes a merchant
-question — the figure never enters the books silently.
+the receipt total. A mismatch blocks the commit — only the flagged extraction
+and a merchant question keyed by the document sha enter the record, and the
+transaction is created when the merchant answers.
 """
 import json
 import os
@@ -52,6 +53,17 @@ def run(ctx, args):
     extraction["cross_check"] = cross_check
     record.store_extraction(sha, extraction)
 
+    if cross_check != "ok":
+        record.log("verification", "extraction_held", f"extraction {sha[:12]} held: items sum KSh {items_sum:,.0f} != stated total KSh {total:,.0f}")
+        question = record.add_question(
+            "doc:" + sha,
+            f"The receipt from {extraction.get('vendor')} lists items adding "
+            f"to KSh {items_sum:,.0f} but a total of KSh {total:,.0f}. "
+            "Which figure is right?")
+        return {"sha": sha, "cached": False, "transaction_id": None,
+                "held": True, "question_id": question["id"],
+                "extraction": extraction}
+
     txn_id = record.add_transaction(
         date=extraction.get("date") or "",
         details=f"Receipt — {extraction.get('vendor') or 'unknown vendor'}",
@@ -60,16 +72,10 @@ def run(ctx, args):
         source=f"receipt:{sha[:12]}",
         stream=None,
         category=None,
-        confidence=1.0 if cross_check == "ok" else 0.5,
+        confidence=1.0,
         document_sha=sha,
         items=items,
         vendor=extraction.get("vendor"),
     )
-    if cross_check != "ok":
-        record.add_question(
-            txn_id,
-            f"The receipt from {extraction.get('vendor')} lists items adding "
-            f"to KSh {items_sum:,.0f} but a total of KSh {total:,.0f}. "
-            "Which figure is right?")
     return {"sha": sha, "cached": False, "transaction_id": txn_id,
             "extraction": extraction}
