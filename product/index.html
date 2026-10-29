@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="ui-kit.css">
 <script type="module">
 /* World-class motion layer — Motion (springs) + NumberFlow (digit-roll figures).
    Progressive enhancement only: if the CDN is unreachable, Hazina works exactly
@@ -22,13 +24,12 @@ document.dispatchEvent(new Event("libsready"));
 </script>
 <style>
 :root{
-  --bg:#F4F6FB; --paper:#FFFFFF; --ink:#0B1B2B; --ink2:#33506B; --mut:#64798E;
-  --azure:#2563EB; --azure2:#38BDF8; --gold:#F2C14E; --gold-d:#B8860B;
-  --line:#E3EAF3; --line2:#EEF2F8;
-  --ok:#12805C; --ok-bg:#E3F5EC; --warn:#96690A; --warn-bg:#FDF0D3; --bad:#B3372F; --bad-bg:#FDECEA;
-  --r-lg:20px; --r-md:14px; --r-sm:10px;
-  --shadow:0 1px 2px rgba(11,27,43,.05),0 10px 30px -12px rgba(11,27,43,.14);
-  --shadow-lg:0 2px 4px rgba(11,27,43,.06),0 24px 48px -16px rgba(11,27,43,.22);
+  --bg:var(--color-bg); --paper:var(--surface); --ink:var(--color-ink); --ink2:var(--ink-muted); --mut:var(--ink-faint);
+  --azure:var(--primary); --azure2:var(--azure-light); --gold:var(--color-gold); --gold-d:var(--gold-ink);
+  --line:var(--border); --line2:var(--color-azure-bg);
+  --ok:var(--success-ink); --ok-bg:var(--success-bg); --warn:var(--warning-strong); --warn-bg:var(--warning-bg); --bad:var(--danger); --bad-bg:var(--danger-bg);
+  --r-lg:var(--radius-lg); --r-md:var(--radius-md); --r-sm:var(--radius-sm);
+  --shadow:var(--shadow-sm); --shadow-lg:var(--shadow-lg);
   --ease:cubic-bezier(.22,.9,.28,1);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -39,7 +40,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   radial-gradient(520px 320px at -10% 12%, rgba(242,193,78,.16), transparent 65%),
   radial-gradient(700px 500px at 50% 115%, rgba(37,99,235,.10), transparent 65%);}
 #wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:0 16px 60px}
-header{position:sticky;top:0;z-index:40;margin:0 -16px;padding:12px 16px 11px;background:rgba(244,246,251,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(227,234,243,.85)}
+header{position:sticky;top:0;z-index:40;margin:0 -16px;padding:12px 16px 11px;background:rgba(245,248,252,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(227,234,243,.85)}
 .hrow{display:flex;align-items:center;gap:11px}
 .mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,#0A2540,#123a6e 60%,#1D4ED8);display:grid;place-items:center;box-shadow:0 6px 16px -6px rgba(10,37,64,.55);flex:none}
 .mark svg{width:24px;height:24px}
@@ -54,32 +55,24 @@ header{position:sticky;top:0;z-index:40;margin:0 -16px;padding:12px 16px 11px;ba
 .hero p{color:var(--ink2);font-size:14.5px;margin:0;max-width:54ch}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px;margin-top:14px}
+.card{margin-top:14px}
 .card h2{font-size:16.5px;margin:0 0 4px}
 .lede{font-size:13.5px;color:var(--ink2);margin:0 0 12px}.lede b{color:var(--ink)}
 label.fl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);display:block;margin:14px 0 6px}
 label.fl:first-child{margin-top:2px}
-input[type=text],input[type=month],input[type=date],input[type=number],input[type=password],select,textarea{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:var(--r-md);font-size:15.5px;font-family:inherit;background:#FBFCFE;color:var(--ink);transition:border-color .2s,box-shadow .2s;appearance:none}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--azure);box-shadow:0 0 0 4px rgba(37,99,235,.13);background:#fff}
+input[type=text],input[type=month],input[type=date],input[type=number],input[type=password],select,textarea{width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:var(--r-md);font-size:15.5px;font-family:inherit;background:var(--surface);color:var(--ink);transition:border-color .2s,box-shadow .2s;appearance:none}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--ring);outline-offset:1px;border-color:var(--azure);background:#fff}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2364798E' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.grid2{grid-template-columns:1fr}}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:12px 18px;font-size:14.5px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s var(--ease);background:var(--azure);color:#fff;box-shadow:0 8px 18px -8px rgba(37,99,235,.55)}
-.btn:active{transform:scale(.975)}
-.btn:disabled{opacity:.45;box-shadow:none;cursor:default}
-.btn.gold{background:linear-gradient(135deg,#F6CD63,var(--gold));color:#231a02;box-shadow:0 8px 18px -8px rgba(184,134,11,.6)}
-.btn.ghost{background:#fff;color:var(--azure);border:1.5px solid #C7D8F5;box-shadow:none}
-.btn.dark{background:#0A2540;box-shadow:0 8px 18px -8px rgba(10,37,64,.6)}
-.btn.sm{padding:9px 14px;font-size:13.5px;border-radius:10px}
+.btn-dark{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 8px 18px -8px rgba(11,18,32,.6)}
+.btn-dark:hover{background:var(--color-navy);border-color:var(--color-navy)}
 .btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
-.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.info{background:#E7F0FE;color:var(--azure)} .pill.mut{background:#EDF1F7;color:var(--mut)}
+.alert svg{width:17px;height:17px;flex:none;margin-top:1px}
+.alert{margin-top:11px}
 .hidden{display:none!important}
-.notice{display:flex;gap:10px;border-radius:var(--r-md);padding:12px 14px;font-size:13px;margin-top:11px;line-height:1.5}
-.notice svg{width:17px;height:17px;flex:none;margin-top:1px}
-.notice.warn{background:var(--warn-bg);color:#6d5205}.notice.warn svg{stroke:var(--warn)}
-.notice.info{background:#EAF2FE;color:#17457e}.notice.info svg{stroke:var(--azure)}
-.setupbar{display:flex;gap:10px;background:#FFF8E1;border:1px solid #F0DCA0;border-radius:var(--r-md);padding:12px 14px;font-size:13px;color:#6d5205;margin-top:16px;line-height:1.5}
+/* notices are kit .alert now (see ui-kit.css) */
+.setupbar{display:flex;gap:10px;background:var(--warning-bg);border:1px solid var(--gold);border-radius:var(--r-md);padding:12px 14px;font-size:13px;color:var(--gold-ink);margin-top:16px;line-height:1.5}
 .setupbar svg{width:17px;height:17px;flex:none;stroke:var(--gold-d);margin-top:1px}
 /* gate */
 .gatecard{max-width:430px;margin:7vh auto 0;background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);padding:28px 24px;animation:rise .5s var(--ease) both}
@@ -99,7 +92,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .mcard .mt{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:5px}
 .mcard .ms{font-size:12px;color:var(--mut)}
 /* tabs */
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 2px;margin-top:14px;scrollbar-width:none}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 2px;margin-top:14px;scrollbar-width:none;border-bottom:0}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:8px 15px;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--ink2);transition:all .18s var(--ease)}
 .tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -183,9 +176,9 @@ select.mini{width:auto;padding:6px 26px 6px 9px;font-size:12px;border-radius:8px
 .packhero .pbig{font-family:'Fraunces',serif;font-size:44px;font-weight:700;line-height:1.05;margin:5px 0 2px;font-variant-numeric:tabular-nums}
 .packhero .psub{font-size:13px;color:#BFD6F7}
 .packhero .pmeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
-.packhero .pill{background:rgba(255,255,255,.13);color:#DCE9FF;border:1px solid rgba(255,255,255,.16)}
-.packhero .pill.good{background:rgba(62,207,142,.18);color:#8CF0BC;border-color:rgba(62,207,142,.3)}
-.packhero .pill.alert{background:rgba(242,93,78,.2);color:#FFB4A8;border-color:rgba(242,93,78,.35)}
+.packhero .badge{background:rgba(255,255,255,.13);color:#DCE9FF;border:1px solid rgba(255,255,255,.16)}
+.packhero .badge.good{background:rgba(62,207,142,.18);color:#8CF0BC;border-color:rgba(62,207,142,.3)}
+.packhero .badge.alertb{background:rgba(242,93,78,.2);color:#FFB4A8;border-color:rgba(242,93,78,.35)}
 .doc{background:#FFF;border:1px solid var(--line);border-radius:var(--r-md);margin-top:12px;overflow:hidden}
 .doc summary{cursor:pointer;padding:13px 16px;font-weight:700;font-size:14px;list-style:none}
 .doc summary::-webkit-details-marker{display:none}
@@ -216,7 +209,7 @@ select.mini{width:auto;padding:6px 26px 6px 9px;font-size:12px;border-radius:8px
 .integ .iic svg{width:20px;height:20px;stroke:var(--azure)}
 .integ b{font-size:14px;display:block}
 .integ span{font-size:12.5px;color:var(--mut);display:block;line-height:1.45}
-.integ .pill{margin-left:auto;flex:none}
+.integ .badge{margin-left:auto;flex:none}
 number-flow{font:inherit;font-variant-numeric:tabular-nums}
 </style>
 </head>
@@ -239,7 +232,7 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
     <h2>Open your books</h2>
     <p>Enter your business's access code to open its workspace. Your books live here — every month, every receipt, every answer.</p>
     <input id="gateCode" type="password" placeholder="Access code" autocomplete="current-password" style="text-align:center">
-    <div style="margin-top:13px"><button id="gateBtn" class="btn" style="width:100%">Open workspace</button></div>
+    <div style="margin-top:13px"><button id="gateBtn" class="btn btn-primary" style="width:100%">Open workspace</button></div>
     <div id="gateMsg" style="font-size:13px;color:var(--bad);font-weight:600;margin-top:9px;text-align:center"></div>
     <details>
       <summary>Ansai admin — create a workspace</summary>
@@ -250,7 +243,7 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
       <label class="fl">Owner name</label><input id="adOwner" type="text">
       <label class="fl">KRA PIN (optional)</label><input id="adPin" type="text">
       <label class="fl">Access code for this business (6+ characters)</label><input id="adCode" type="text">
-      <div class="btnrow"><button id="adCreate" class="btn gold" style="width:100%">Create workspace</button></div>
+      <div class="btnrow"><button id="adCreate" class="btn btn-gold" style="width:100%">Create workspace</button></div>
       <div id="adMsg" style="font-size:13px;font-weight:600;margin-top:8px"></div>
     </details>
   </div>
@@ -272,7 +265,7 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
     <div id="monthGrid" class="mgrid"></div>
     <div class="grid2" style="margin-top:16px">
       <div><label class="fl">New month</label><input type="month" id="newPeriod"></div>
-      <div style="display:flex;align-items:flex-end"><button id="newMonthBtn" class="btn" style="width:100%">Start month</button></div>
+      <div style="display:flex;align-items:flex-end"><button id="newMonthBtn" class="btn btn-primary" style="width:100%">Start month</button></div>
     </div>
   </div>
   <div class="card">
@@ -395,7 +388,7 @@ async function loadHome(){
   $("yearStrip").innerHTML=MONTHS.length?("<div class='tiles'><div class='tile'><span>Months on the books</span><b>"+MONTHS.length+"</b><small>"+MONTHS.filter(m=>m.status==="closed").length+" locked, "+MONTHS.filter(m=>m.status!=="closed").length+" in progress</small></div>"+
    "<div class='tile'><span>TOT on saved packs</span><b>"+fmt0(totY)+"</b><small>Across "+Object.keys(PACKS).length+" saved pack(s)</small></div></div>"):"";
   $("monthGrid").innerHTML=MONTHS.length?MONTHS.map(m=>{const p=PACKS[m.id];const R=p&&p.results;
-    return "<button class='mcard' data-month='"+m.id+"'><div style='display:flex;align-items:center;gap:8px'><span class='mp'>"+monthName(m.period)+"</span><span class='pill "+(m.status==="closed"?"ok":m.status==="closing"?"warn":"info")+"' style='margin-left:auto'>"+(m.status==="closed"?"Locked":m.status==="closing"?"Closing":"Open")+"</span></div>"+
+    return "<button class='mcard' data-month='"+m.id+"'><div style='display:flex;align-items:center;gap:8px'><span class='mp'>"+monthName(m.period)+"</span><span class='badge "+(m.status==="closed"?"badge-mint":m.status==="closing"?"badge-gold":"badge-azure")+"' style='margin-left:auto'>"+(m.status==="closed"?"Locked":m.status==="closing"?"Closing":"Open")+"</span></div>"+
     (R?"<div class='mt'>"+fmt(R.tot)+"</div><div class='ms'>Turnover Tax · gross "+fmt0(R.gross)+"</div>":"<div class='mt' style='color:var(--mut)'>—</div><div class='ms'>No pack saved yet — close it with Hazi</div>")+"</button>";}).join("")
    :"<p class='lede' style='grid-column:1/-1'>No months yet. Start the first one below — last month is a good place to begin.</p>";
   document.querySelectorAll("[data-month]").forEach(el=>el.onclick=()=>openMonth(el.dataset.month));
@@ -412,7 +405,7 @@ const TABS=[["overview","Overview"],["ledger","Ledger"],["receipts","Receipts"],
 function renderMonth(){
   const m=B.month;
   $("mTitle").textContent=monthName(m.period);
-  $("mSub").innerHTML="<span class='pill "+(m.status==="closed"?"ok":m.status==="closing"?"warn":"info")+"'>"+(m.status==="closed"?"Locked":m.status==="closing"?"Closing":"Open")+"</span> "+
+  $("mSub").innerHTML="<span class='badge "+(m.status==="closed"?"badge-mint":m.status==="closing"?"badge-gold":"badge-azure")+"'>"+(m.status==="closed"?"Locked":m.status==="closing"?"Closing":"Open")+"</span> "+
    "<span style='color:var(--mut);font-size:13px'>"+B.txns.length+" ledger lines · "+B.receipts.filter(r=>r.status==="confirmed").length+" confirmed receipts · TOT due "+dueDate(m.period)+"</span>";
   $("tabs").innerHTML=TABS.map(t=>"<button class='tab"+(TAB===t[0]?" on":"")+"' data-tab='"+t[0]+"'>"+t[1]+
    (t[0]==="receipts"&&B.receipts.filter(r=>r.status==="confirmed").length?"<span class='cnt'>"+B.receipts.filter(r=>r.status==="confirmed").length+"</span>":"")+
@@ -433,29 +426,29 @@ function figuresTiles(R){
 function overviewBody(){
   const R=computeClient();const lastHazi=B.events.find(e=>e.actor==="hazi");
   let h="";
-  if(locked())h+="<div class='notice info'>"+INFO+"<div>This month is <b>approved and locked</b>. Figures are frozen in the saved pack; reopen the month from the Pack tab if something must change.</div></div>";
-  else if(!B.txns.length)h+="<div class='notice info'>"+INFO+"<div>This month is empty. Start in <b>Close with Hazi</b>: import the M-Pesa statement, add the receipts, and Hazi reconciles the month with you.</div></div>";
+  if(locked())h+="<div class='alert alert-info'>"+INFO+"<div>This month is <b>approved and locked</b>. Figures are frozen in the saved pack; reopen the month from the Pack tab if something must change.</div></div>";
+  else if(!B.txns.length)h+="<div class='alert alert-info'>"+INFO+"<div>This month is empty. Start in <b>Close with Hazi</b>: import the M-Pesa statement, add the receipts, and Hazi reconciles the month with you.</div></div>";
   h+=figuresTiles(R);
-  if(lastHazi)h+="<div class='card'><h2>Hazi's latest</h2><p class='lede' style='margin:0'>"+esc(lastHazi.detail)+"</p><div class='btnrow'><button class='btn sm ghost' data-jump='ask'>Ask Hazi about this month</button><button class='btn sm ghost' data-jump='activity'>See the full trail</button></div></div>";
+  if(lastHazi)h+="<div class='card'><h2>Hazi's latest</h2><p class='lede' style='margin:0'>"+esc(lastHazi.detail)+"</p><div class='btnrow'><button class='btn btn-sm btn-ghost' data-jump='ask'>Ask Hazi about this month</button><button class='btn btn-sm btn-ghost' data-jump='activity'>See the full trail</button></div></div>";
   h+="<div class='card'><h2>Still to do</h2>"+(
-   openQ().length?"<p class='lede'>"+openQ().length+" payment line(s) are waiting for your word.</p><div class='btnrow'><button class='btn sm gold' data-jump='close'>Answer with Hazi</button></div>":
-   B.receipts.some(r=>r.status!=="confirmed")?"<p class='lede'>Some receipts aren't confirmed yet — unconfirmed paper can't be matched.</p><div class='btnrow'><button class='btn sm gold' data-jump='receipts'>Confirm receipts</button></div>":
-   !B.pack?"<p class='lede'>Everything is evidenced. Save the pack, then approve &amp; lock the month.</p><div class='btnrow'><button class='btn sm gold' data-jump='close'>Finish the close</button></div>":
+   openQ().length?"<p class='lede'>"+openQ().length+" payment line(s) are waiting for your word.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='close'>Answer with Hazi</button></div>":
+   B.receipts.some(r=>r.status!=="confirmed")?"<p class='lede'>Some receipts aren't confirmed yet — unconfirmed paper can't be matched.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='receipts'>Confirm receipts</button></div>":
+   !B.pack?"<p class='lede'>Everything is evidenced. Save the pack, then approve &amp; lock the month.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='close'>Finish the close</button></div>":
    "<p class='lede' style='margin:0'>Nothing outstanding — the month is fully evidenced and its pack is saved.</p>")+"</div>";
   return h;}
 function ledgerBody(){
   let h="<div class='card'><h2>Ledger — "+B.txns.length+" lines</h2><p class='lede'>Statement lines are read by code, never typed. Cash and anything the statement misses can be added by hand below — Hazi keeps the two apart in the pack.</p>";
   if(!locked())h+="<div class='grid2'><div><label class='fl'>Date</label><input type='date' id='mtDate'></div><div><label class='fl'>Details</label><input type='text' id='mtDetails' placeholder='e.g. Cash sales — Saturday'></div></div>"+
    "<div class='grid2'><div><label class='fl'>Amount (KSh)</label><input type='number' inputmode='decimal' id='mtAmount'></div><div><label class='fl'>Direction</label><select id='mtDir'><option value='in'>Money in</option><option value='out'>Money out</option></select></div></div>"+
-   "<div class='btnrow'><button class='btn sm' id='addTxnBtn'>Add line</button></div>";
+   "<div class='btnrow'><button class='btn btn-primary btn-sm' id='addTxnBtn'>Add line</button></div>";
   if(!B.txns.length)h+="<p class='lede' style='margin-top:14px'>No lines yet — import the statement in <b>Close with Hazi</b>, or add a cash line above.</p>";
   h+=B.txns.map(t=>{const matched=B.receipts.some(r=>r.matched_txn_id===t.id);const off=t.is_business===false;
    return "<div class='lrow'"+(off?" style='opacity:.55'":"")+"><div class='ld'><b>"+esc(t.details||"(no details)")+"</b><span>"+esc(t.txn_date||"")+" · "+(t.source==="manual"?"by hand":"statement")+(t.receipt_code?" · "+esc(t.receipt_code):"")+"</span></div>"+
-   (matched?"<span class='pill ok'>Receipt ✓</span>":"")+
+   (matched?"<span class='badge badge-mint'>Receipt ✓</span>":"")+
    "<span class='la "+t.direction+"'>"+(t.direction==="in"?"+":"−")+" "+fmt0(t.amount)+"</span>"+
    (locked()?"":t.direction==="out"
      ?"<select class='mini' data-lcat='"+t.id+"'>"+["","supplies","wages","rent","transport","other","personal"].map(c=>"<option value='"+c+"'"+((t.category||"")===c?" selected":"")+">"+(c===""?"Classify…":c==="personal"?"Personal":c[0].toUpperCase()+c.slice(1))+"</option>").join("")+"</select>"
-     :"<button class='btn sm ghost' data-notsale='"+t.id+"'>"+(off?"Counts as a sale":"Not a sale")+"</button>")+
+     :"<button class='btn btn-sm btn-ghost' data-notsale='"+t.id+"'>"+(off?"Counts as a sale":"Not a sale")+"</button>")+
    "</div>";}).join("");
   return h+"</div>";}
 function receiptCard(r,local){
@@ -464,11 +457,11 @@ function receiptCard(r,local){
   if(r.dataUrl)h+="<img class='thumb' src='"+r.dataUrl+"' alt='Receipt photo'>";
   else h+="<div class='nothumb'>"+DOC+"</div>";
   h+="<div class='rmeta'><div style='display:flex;align-items:center;gap:8px'><span class='rname'>"+esc(r.vendor||r.file_name||"Receipt")+"</span>"+
-   "<span class='pill "+(dis?"ok":r.status==="reading"?"info":"warn")+"'>"+(dis?"Confirmed":r.status==="reading"?"Reading…":r.status==="draft"?"Check & confirm":"New")+"</span></div>"+
+   "<span class='badge "+(dis?"badge-mint":r.status==="reading"?"badge-azure":"badge-gold")+"'>"+(dis?"Confirmed":r.status==="reading"?"Reading…":r.status==="draft"?"Check & confirm":"New")+"</span></div>"+
    "<div class='rsub'>"+esc(r.file_name||"")+(r.matched_txn_id?" · matched to a statement line":"")+"</div>";
   if(r.status==="reading")h+="<div class='shimmer'></div><div class='shimmer' style='width:62%'></div>";
   if(r.status==="new"&&!locked()){
-    h+="<div class='btnrow'>"+(r.dataUrl?"<button class='btn sm' data-act='read' data-i='"+i+"'>Read receipt</button>":"")+"<button class='btn sm ghost' data-act='manual' data-i='"+i+"'>Enter by hand</button></div>";
+    h+="<div class='btnrow'>"+(r.dataUrl?"<button class='btn btn-primary btn-sm' data-act='read' data-i='"+i+"'>Read receipt</button>":"")+"<button class='btn btn-sm btn-ghost' data-act='manual' data-i='"+i+"'>Enter by hand</button></div>";
     if(r.error)h+="<div class='err'>"+esc(r.error)+"</div>";}
   if(r.status==="draft"||dis){
     const dd=dis?" disabled":"";
@@ -482,8 +475,8 @@ function receiptCard(r,local){
     h+="<label class='etims'><input type='checkbox' data-f='etims' data-i='"+i+"'"+(r.is_etims?" checked":"")+dd+"><span>This is an <b>eTIMS invoice</b> (control-unit / invoice number) — eTIMS-backed costs stay deductible.</span></label>";
     if(r.error)h+="<div class='err'>"+esc(r.error)+"</div>";
     if(!locked()){
-      if(r.status==="draft")h+="<div class='btnrow'><button class='btn sm gold' data-act='confirm' data-i='"+i+"'>Confirm — this is what it says</button></div>";
-      else h+="<div class='btnrow'><button class='btn sm ghost' data-act='edit' data-i='"+i+"'>Edit</button>"+(local?"":"<button class='btn sm ghost' data-act='del' data-i='"+i+"'>Remove</button>")+"</div>";}
+      if(r.status==="draft")h+="<div class='btnrow'><button class='btn btn-sm btn-gold' data-act='confirm' data-i='"+i+"'>Confirm — this is what it says</button></div>";
+      else h+="<div class='btnrow'><button class='btn btn-sm btn-ghost' data-act='edit' data-i='"+i+"'>Edit</button>"+(local?"":"<button class='btn btn-sm btn-ghost' data-act='del' data-i='"+i+"'>Remove</button>")+"</div>";}
   }
   return h+"</div></div>";}
 function receiptsBody(){
@@ -491,7 +484,7 @@ function receiptsBody(){
   if(!locked())h+="<label class='drop'><span class='dic'>"+CAM+"</span><span><b>Photograph receipts</b><span>Camera or photo library</span></span><input type='file' id='rcptFiles' accept='image/*' multiple></label>";
   h+=B.receipts.map(r=>receiptCard(r,false)).join("");
   h+=NEWRC.map(r=>receiptCard(r,true)).join("");
-  if(!B.receipts.length&&!NEWRC.length)h+="<div class='notice info'>"+INFO+"<div>No paper yet this month. If everything ran through M-Pesa with no receipts, that's fine — Hazi will ask about each payment line instead.</div></div>";
+  if(!B.receipts.length&&!NEWRC.length)h+="<div class='alert alert-info'>"+INFO+"<div>No paper yet this month. If everything ran through M-Pesa with no receipts, that's fine — Hazi will ask about each payment line instead.</div></div>";
   return h+"</div>";}
 
 // ---- close with Hazi ----
@@ -509,39 +502,39 @@ function closeBody(){
     let body="";
     if(st.n===1)body="<p class='lede'>Export the month from M-Pesa as a <b>CSV statement</b>. Hazi reads the lines itself — nothing is typed by hand, so nothing can be quietly altered.</p>"+
      (locked()?"":"<label class='drop'><span class='dic'>"+DOC+"</span><span><b>"+(B.txns.length?"Replace the statement":"Add the M-Pesa statement")+"</b><span>Re-importing replaces the previous statement lines; hand-added lines stay</span></span><input type='file' id='stmtFile' accept='.csv,text/csv'></label>")+
-     (B.txns.length?"<div class='btnrow'><button class='btn sm' data-cnext='2'>Continue</button></div>":"");
-    if(st.n===2)body="<p class='lede'>Receipts are managed in the <b>Receipts tab</b> — photograph, let Hazi read, confirm. <b>"+conf.length+" confirmed</b> so far.</p><div class='btnrow'><button class='btn sm gold' data-jump='receipts'>Open receipts</button>"+(conf.length?"<button class='btn sm' data-cnext='3'>Continue</button>":"")+"</div>";
+     (B.txns.length?"<div class='btnrow'><button class='btn btn-primary btn-sm' data-cnext='2'>Continue</button></div>":"");
+    if(st.n===2)body="<p class='lede'>Receipts are managed in the <b>Receipts tab</b> — photograph, let Hazi read, confirm. <b>"+conf.length+" confirmed</b> so far.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='receipts'>Open receipts</button>"+(conf.length?"<button class='btn btn-primary btn-sm' data-cnext='3'>Continue</button>":"")+"</div>";
     if(st.n===3)body="<p class='lede'>Hazi compares every confirmed receipt against the statement — <b>amount exact, date within three days, one-to-one</b>. Whatever has no receipt becomes a question only you can answer.</p>"+
-     (locked()?"":"<div class='btnrow'><button class='btn gold' id='reconcileBtn'>"+(reconciled?"Re-run reconciliation":"Reconcile the month")+"</button></div>")+
-     (matched.length?"<div style='margin-top:8px'>"+matched.map(r=>{const t=txnById(r.matched_txn_id);return "<div class='matchline'><span class='pill ok'>Matched</span><span>"+esc(r.vendor||r.file_name)+" → "+esc(t?t.details:"")+"</span><span class='amt'>"+fmt(t?t.amount:r.amount)+"</span></div>";}).join("")+"</div>":"");
+     (locked()?"":"<div class='btnrow'><button class='btn btn-gold' id='reconcileBtn'>"+(reconciled?"Re-run reconciliation":"Reconcile the month")+"</button></div>")+
+     (matched.length?"<div style='margin-top:8px'>"+matched.map(r=>{const t=txnById(r.matched_txn_id);return "<div class='matchline'><span class='badge badge-mint'>Matched</span><span>"+esc(r.vendor||r.file_name)+" → "+esc(t?t.details:"")+"</span><span class='amt'>"+fmt(t?t.amount:r.amount)+"</span></div>";}).join("")+"</div>":"");
     if(st.n===4)body=questionsHTML();
     if(st.n===5)body=packStepHTML();
     return "<section class='step"+(CSTEP===st.n?" active":"")+(st.done?" done":"")+"'><button class='shead' data-cstep='"+st.n+"'><span class='snode'>"+(st.done?CHECK:st.n)+"</span><span><span class='stitle'>"+st.t+"</span><div class='ssum'>"+(CSTEP===st.n?st.sum:st.sum)+"</div></span></button><div class='sbody'><div><div class='sin'>"+body+"</div></div></div></section>";}).join("")+"</div>";
   return h;}
 function questionsHTML(){
   if(!B.questions.length)return "<p class='lede'>No questions yet — reconcile first, and Hazi will ask about every payment line that has no receipt.</p>";
-  let h="<div class='notice info'>"+INFO+"<div><b>"+openQ().length+" open</b> · "+(B.questions.length-openQ().length)+" answered. Your answers are recorded in the month's trail and shape the pack.</div></div>";
+  let h="<div class='alert alert-info'>"+INFO+"<div><b>"+openQ().length+" open</b> · "+(B.questions.length-openQ().length)+" answered. Your answers are recorded in the month's trail and shape the pack.</div></div>";
   h+=B.questions.map(q=>{const t=txnById(q.txn_id);const answered=q.status==="answered";
-    return "<div class='qcard"+(answered?" answered":"")+"'><div style='display:flex;align-items:baseline;gap:9px'><span class='qamt'>"+fmt(t?t.amount:0)+"</span><span class='pill "+(answered?"ok":"warn")+"'>"+(answered?esc(q.category==="personal"?"Personal":q.category):"Needs your word")+"</span></div>"+
+    return "<div class='qcard"+(answered?" answered":"")+"'><div style='display:flex;align-items:baseline;gap:9px'><span class='qamt'>"+fmt(t?t.amount:0)+"</span><span class='badge "+(answered?"badge-mint":"badge-gold")+"'>"+(answered?esc(q.category==="personal"?"Personal":q.category):"Needs your word")+"</span></div>"+
     "<div class='qline'>"+esc(q.question)+"</div>"+
     (locked()?"":"<div class='cats'>"+CATS.map(c=>"<button class='cat"+(q.category===c[0]?" sel":"")+(c[0]==="personal"?" personal":"")+"' data-qid='"+q.id+"' data-cat='"+c[0]+"'>"+c[1]+"</button>").join("")+"</div>")+"</div>";}).join("");
   return h;}
 function packStepHTML(){
   const R=computeClient();
   let h="<p class='lede'>Hazi computes from the <b>rules in config</b> — never from the model — and saves the pack with the hashes of everything it rests on, so the figures can be re-derived later.</p>"+figuresTiles(R);
-  if(B.pack)h+="<div class='notice info'>"+INFO+"<div>Pack saved "+new Date(B.pack.created_at).toLocaleString("en-KE")+" · rules "+esc(B.pack.results.rulesVersion||"")+" · statement hash <span style='font-family:ui-monospace,Menlo,monospace'>"+esc((B.pack.results.inputs&&B.pack.results.inputs.statement_sha256||"").slice(0,16))+"…</span></div></div>";
-  if(!locked())h+="<div class='btnrow'><button class='btn' id='savePackBtn'>"+(B.pack?"Re-save the pack":"Save the pack")+"</button>"+(B.pack?"<button class='btn gold' id='lockBtn'>Approve &amp; lock this month</button>":"")+"</div>";
-  else h+="<div class='btnrow'><button class='btn ghost' id='reopenBtn'>Reopen this month</button></div>";
+  if(B.pack)h+="<div class='alert alert-info'>"+INFO+"<div>Pack saved "+new Date(B.pack.created_at).toLocaleString("en-KE")+" · rules "+esc(B.pack.results.rulesVersion||"")+" · statement hash <span style='font-family:ui-monospace,Menlo,monospace'>"+esc((B.pack.results.inputs&&B.pack.results.inputs.statement_sha256||"").slice(0,16))+"…</span></div></div>";
+  if(!locked())h+="<div class='btnrow'><button class='btn btn-primary' id='savePackBtn'>"+(B.pack?"Re-save the pack":"Save the pack")+"</button>"+(B.pack?"<button class='btn btn-gold' id='lockBtn'>Approve &amp; lock this month</button>":"")+"</div>";
+  else h+="<div class='btnrow'><button class='btn btn-ghost' id='reopenBtn'>Reopen this month</button></div>";
   return h;}
 // ---- pack tab ----
 function packBody(){
-  if(!B.pack)return "<div class='card'><h2>No pack saved yet</h2><p class='lede'>The filing pack is produced at the end of the close — figures, the TOT values file, the watches and the evidence index. Run <b>Close with Hazi</b> and save it in the last step.</p><div class='btnrow'><button class='btn gold' data-jump='close'>Close with Hazi</button></div></div>";
+  if(!B.pack)return "<div class='card'><h2>No pack saved yet</h2><p class='lede'>The filing pack is produced at the end of the close — figures, the TOT values file, the watches and the evidence index. Run <b>Close with Hazi</b> and save it in the last step.</p><div class='btnrow'><button class='btn btn-gold' data-jump='close'>Close with Hazi</button></div></div>";
   const R=B.pack.results;
   let h="<div class='packhero'><div class='plabel'>Turnover Tax payable · "+monthName(B.month.period)+"</div><div class='pbig'><span id='totBig' data-value='"+R.tot+"'>"+fmt(R.tot)+"</span></div>"+
    "<div class='psub'>Gross sales "+fmt(R.gross)+" × "+(R.rate*100).toFixed(1)+"% · file &amp; pay by <b style='color:#fff'>"+dueDate(B.month.period)+"</b></div>"+
-   "<div class='pmeta'><span class='pill "+(R.vatMust?"alert":"good")+"'>VAT watch: "+(R.vatMust?"registration required":"below threshold")+"</span><span class='pill'>"+(R.tot<=R.std?"TOT cheaper this month":"Standard looks cheaper")+"</span>"+(locked()?"<span class='pill good'>Approved &amp; locked</span>":"")+"</div></div>";
+   "<div class='pmeta'><span class='badge "+(R.vatMust?"alertb":"good")+"'>VAT watch: "+(R.vatMust?"registration required":"below threshold")+"</span><span class='badge'>"+(R.tot<=R.std?"TOT cheaper this month":"Standard looks cheaper")+"</span>"+(locked()?"<span class='badge good'>Approved &amp; locked</span>":"")+"</div></div>";
   h+=figuresTiles(R);
-  h+="<div class='btnrow'><button class='btn' id='dlPackBtn'>Download the filing pack</button><button class='btn ghost' id='dlCsvBtn'>tot_values.csv</button>"+(locked()?"<button class='btn ghost' id='reopenBtn2'>Reopen month</button>":"")+"</div>";
+  h+="<div class='btnrow'><button class='btn btn-primary' id='dlPackBtn'>Download the filing pack</button><button class='btn btn-ghost' id='dlCsvBtn'>tot_values.csv</button>"+(locked()?"<button class='btn btn-ghost' id='reopenBtn2'>Reopen month</button>":"")+"</div>";
   h+="<details class='doc'><summary>Read the full pack</summary><pre>"+esc(B.pack.pack_text||"")+"</pre></details>";
   h+="<p class='lede' style='margin-top:10px'>Saved "+new Date(B.pack.created_at).toLocaleString("en-KE")+" · rules "+esc(R.rulesVersion||"")+" · statement hash "+esc((R.inputs&&R.inputs.statement_sha256||"").slice(0,20))+"… · "+((R.inputs&&R.inputs.receipts||[]).length)+" receipt hashes on record.</p>";
   return h;}
@@ -550,8 +543,8 @@ function askBody(){
   let h="<div class='card'><h2>Ask Hazi</h2><p class='lede'>Hazi answers from <b>this month's own record</b> — the ledger, the receipts, your answers and the pack. If the record doesn't say, Hazi says so. Figures are the computed ones, never re-invented.</p>";
   h+="<div class='sugg'>"+["Why is my TOT this amount?","Which costs would KRA disallow?","What is still unanswered?","What happens if I cross the VAT threshold?"].map(q=>"<button data-sugg='"+esc(q)+"'>"+esc(q)+"</button>").join("")+"</div>";
   h+="<div class='chat' id='chat'>"+ASKTHREAD.map(m=>"<div class='bubble "+m.who+"'>"+(m.who==="hazi"?"<span class='who'>Hazi</span>":"")+esc(m.text)+"</div>").join("")+"</div>";
-  h+="<div class='askrow'><input type='text' id='askInput' placeholder='Ask about "+monthName(B.month.period)+"…' "+(ENV.modelKey?"":"disabled")+"><button class='btn' id='askSend' "+(ENV.modelKey?"":"disabled")+">Ask</button></div>";
-  if(!ENV.modelKey)h+="<div class='notice warn'>"+WARN+"<div>Hazi's answers are waiting for the Meta API key (MODEL_API_KEY) in the project settings.</div></div>";
+  h+="<div class='askrow'><input type='text' id='askInput' placeholder='Ask about "+monthName(B.month.period)+"…' "+(ENV.modelKey?"":"disabled")+"><button class='btn btn-primary' id='askSend' "+(ENV.modelKey?"":"disabled")+">Ask</button></div>";
+  if(!ENV.modelKey)h+="<div class='alert alert-warning'>"+WARN+"<div>Hazi's answers are waiting for the Meta API key (MODEL_API_KEY) in the project settings.</div></div>";
   return h+"</div>";}
 // ---- activity ----
 function activityBody(){
@@ -621,7 +614,7 @@ const INTEG = [
 ];
 function renderInteg() {
   const elx = document.getElementById("integList"); if (!elx) return;
-  elx.innerHTML = INTEG.map(i => `<div class="integ"><div class="iic">${PLUG}</div><div><b>${i.n}</b><span>${i.d}</span></div><span class="pill ${i.st === "live" || (i.st === "model" && ENV.modelKey) ? "pg" : "pa"}">${i.st === "live" ? "Live" : i.st === "model" ? (ENV.modelKey ? "Live" : "Needs key") : "Roadmap"}</span></div>`).join("");
+  elx.innerHTML = INTEG.map(i => `<div class="integ"><div class="iic">${PLUG}</div><div><b>${i.n}</b><span>${i.d}</span></div><span class="badge ${i.st === "live" || (i.st === "model" && ENV.modelKey) ? "badge-mint" : "badge-neutral"}">${i.st === "live" ? "Live" : i.st === "model" ? (ENV.modelKey ? "Live" : "Needs key") : "Roadmap"}</span></div>`).join("");
 }
 
 // ---- global wiring ----
