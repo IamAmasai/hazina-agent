@@ -32,6 +32,12 @@ module.exports = async (req, res) => {
     let parsed = null;
     try { parsed = JSON.parse(content); } catch (e) { /* fall through */ }
     if (!parsed) { res.status(502).json({ error: "model returned non-JSON" }); return; }
+    // the flag is explicit — the model's JSON is never passed through as settled.
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    const itemsSum = items.reduce((s, item) => s + (+((item && item.amount_kes) || 0)), 0);
+    const total = typeof parsed.amount_kes === "number" ? parsed.amount_kes : null;
+    parsed.items_sum_kes = itemsSum;
+    parsed.cross_check = (items.length > 0 && total !== null && Math.abs(itemsSum - total) > 0.5) ? "items_do_not_sum_to_total" : "ok";
     res.status(200).json(parsed);
   } catch (e) { fail(res, e); }
 };

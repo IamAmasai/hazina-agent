@@ -31,9 +31,24 @@ def generate_questions(record, transaction_ids):
     return made
 
 
-def apply_answer(record, question_id, answer, category=None, business=True):
+def apply_answer(record, question_id, answer, category=None, business=True, amount_kes=None):
     """The merchant's answer is a record: it classifies the transaction."""
+    target = None
+    for item in record.data["questions"]:
+        if item["id"] == question_id:
+            target = item
+            break
+    if target is None:
+        raise KeyError(question_id)
+    if (target["transaction_id"] or "").startswith("doc:") and amount_kes is None:
+        raise ValueError("merchant-confirmed amount is required to commit held receipt extraction; question stays open, nothing committed")
     q = record.answer_question(question_id, answer, actor="human")
+    if (q["transaction_id"] or "").startswith("doc:"):
+        sha = q["transaction_id"][4:]
+        ext = record.cached_extraction(sha) or {}
+        new_txn_id = record.add_transaction(date=ext.get("date") or "", details="Receipt — " + (ext.get("vendor") or "unknown vendor"), amount_kes=float(amount_kes), direction="out", source="receipt:" + sha[:12], stream=None, category=category, business=business, confidence=1.0, document_sha=sha, items=ext.get("items") or [], vendor=ext.get("vendor"), classified_by="merchant_answer")
+        record.log("human", "held_extraction_committed", f"question {q['id']} committed as {new_txn_id} amount {float(amount_kes)}")
+        return q
     for txn in record.transactions():
         if txn["id"] == q["transaction_id"]:
             txn["category"] = category

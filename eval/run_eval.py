@@ -79,7 +79,10 @@ def failure_cases():
 
     results = {}
 
-    # 1. Items that don't sum to the total -> question + half confidence.
+    # 1. Items that don't sum to the total -> NO commit (rule 3). Only the
+    #    flagged extraction + a question keyed by the document sha enter the
+    #    record; the transaction is created when the merchant answers, at
+    #    the figure they confirm.
     rec = Record("Test Biz", "2026-10", {"income_tax_profile": "tot_band"})
     path = os.path.join(MOCK, "receipt_supplies.png")
     real = extract_receipt.client.vision_extract
@@ -92,10 +95,19 @@ def failure_cases():
         out = extract_receipt.run({"record": rec}, {"path": path})
     finally:
         extract_receipt.client.vision_extract = real
-    txn = rec.transactions()[-1]
+    held_ok = (
+        len(rec.transactions()) == 0
+        and len(rec.data["questions"]) == 1
+        and rec.data["questions"][0]["transaction_id"] == "doc:" + out["sha"]
+        and out.get("held") is True and "error" not in out)
+    ask.apply_answer(rec, rec.data["questions"][0]["id"],
+                     "The items are right: KSh 1,200.",
+                     category="supplies", amount_kes=1200)
+    committed = rec.transactions()
     results["bad_sum_becomes_question"] = (
-        txn["confidence"] == 0.5 and len(rec.data["questions"]) == 1
-        and "error" not in out)
+        held_ok and len(committed) == 1
+        and committed[0]["amount_kes"] == 1200
+        and committed[0]["document_sha"] == out["sha"])
 
     # 2. Truncated statement -> exactly the rows it contains, nothing invented.
     from agent.ingest_csv import parse_mpesa_statement

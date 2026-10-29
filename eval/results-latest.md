@@ -1,12 +1,12 @@
 # Hazi eval — mock month (Zuri Beauty, synthetic fixtures)
 
-- Wall time end-to-end: 21.6s
+- Wall time end-to-end: 20.4s
 - Extraction core fields exact: 15/15
 - Line items exact: 12/12
 - Receipts matched to statement lines: 5/5
 - TOT exact vs ground truth: True
 - Decisions hash-stamped in the record: 3/3
-- Model tokens (receipt extractions): 10091
+- Model tokens (receipt extractions): 9815
 - Open questions left hanging: 0
 
 ## Failure cases (must degrade to questions, never inventions)

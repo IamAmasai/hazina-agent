@@ -91,15 +91,43 @@ module.exports = async (req, res) => {
     }
     if (act === "reconcile") {
       const matches = b.matches || [], questions = b.questions || [];
-      for (const rc of await list("hz_receipts", "month_id=eq." + month.id + "&select=id")) {
+      // Rule 3: re-verify every client-submitted pair server-side before
+      // committing — amount agreement (within KSh 0.50) and date agreement
+      // (within 3 days), mirroring the pipeline's match.py. Pairs that do
+      // not conform are dropped, never committed; a statement line may be
+      // claimed by only one receipt.
+      const [txnRows, receiptRows] = await Promise.all([
+        list("hz_txns", "month_id=eq." + month.id + "&select=id,amount,txn_date,direction"),
+        list("hz_receipts", "month_id=eq." + month.id + "&select=id,amount,receipt_date")
+      ]);
+      for (const rc of receiptRows || []) {
         await patch("hz_receipts", "id=eq." + rc.id, { matched_txn_id: null });
       }
-      for (const m of matches) await patch("hz_receipts", "id=eq." + m.receiptId + "&month_id=eq." + month.id, { matched_txn_id: m.txnId });
+      const txnById = new Map((txnRows || []).map(t => [t.id, t]));
+      const receiptById = new Map((receiptRows || []).map(r => [r.id, r]));
+      const claimed = new Set();
+      const verified = [];
+      for (const m of matches) {
+        const receipt = receiptById.get(m.receiptId);
+        const txn = txnById.get(m.txnId);
+        if (!receipt || !txn) continue;
+        if (txn.direction !== "out") continue;
+        if (claimed.has(txn.id)) continue;
+        if (Math.abs((+txn.amount || 0) - (+receipt.amount || 0)) > 0.5) continue;
+        const gap = Math.abs(Date.parse(receipt.receipt_date) - Date.parse(txn.txn_date)) / 86400000;
+        if (!Number.isFinite(gap) || gap > 3) continue;
+        claimed.add(txn.id);
+        verified.push(m);
+      }
+      for (const v of verified) await patch("hz_receipts", "id=eq." + v.receiptId + "&month_id=eq." + month.id, { matched_txn_id: v.txnId });
       await del("hz_questions", "month_id=eq." + month.id + "&status=eq.open");
       if (questions.length) await insert("hz_questions", questions.map(q => ({ month_id: month.id, txn_id: q.txnId, question: String(q.text || ""), status: "open" })));
       if (month.status === "open") await patch("hz_months", "id=eq." + month.id, { status: "closing" });
-      await logEvent(month.id, "hazi", "reconciled", matches.length + " receipt(s) matched to statement lines; " + questions.length + " payment line(s) need the merchant's word.");
-      res.status(200).json({ ok: true }); return;
+      const dropped = matches.length - verified.length;
+      let detail = verified.length + " receipt(s) matched to statement lines; " + questions.length + " payment line(s) need the merchant's word.";
+      if (dropped > 0) detail += " " + dropped + " submitted pair(s) failed server verification and were dropped.";
+      await logEvent(month.id, "hazi", "reconciled", detail);
+      res.status(200).json({ ok: true, matched: verified.length, dropped }); return;
     }
     if (act === "answer") {
       const qs = await list("hz_questions", "id=eq." + b.questionId + "&month_id=eq." + month.id + "&select=*");
