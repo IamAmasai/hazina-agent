@@ -234,6 +234,10 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
     <input id="gateCode" type="password" placeholder="Access code" autocomplete="current-password" style="text-align:center">
     <div style="margin-top:13px"><button id="gateBtn" class="btn btn-primary" style="width:100%">Open workspace</button></div>
     <div id="gateMsg" style="font-size:13px;color:var(--bad);font-weight:600;margin-top:9px;text-align:center"></div>
+    <div style="text-align:center;font-size:13px;opacity:.65;margin:12px 0 8px">— or —</div>
+    <button id="idBtn" class="btn btn-secondary" style="width:100%">Continue with Ansai ID</button>
+    <div id="idMsg" style="font-size:13px;color:var(--ink);font-weight:600;margin-top:9px;text-align:center"></div>
+    <div id="idPick"></div>
     <details>
       <summary>Ansai admin — create a workspace</summary>
       <label class="fl">Admin passcode</label><input id="adPass" type="password">
@@ -662,6 +666,7 @@ document.addEventListener("keydown",e=>{
 
 // ---- boot & gate wiring ----
 $("gateBtn").onclick=async()=>{try{await post("/api/login",{code:$("gateCode").value});$("gateMsg").textContent="";await loadHome();toast("Workspace open.");}catch(err){$("gateMsg").textContent=err.message;}};
+$("idBtn").onclick=async()=>{try{$("idMsg").textContent="";$("idPick").innerHTML="";const w=await api("/api/id-workspaces");if(!w.workspaces||w.workspaces.length===0){$("idMsg").textContent="This Ansai ID isn't a member of any Hazina workspace yet.";return;}if(w.workspaces.length===1){const d=await post("/api/id-login",{});await loadHome();toast("Workspace open — signed in as "+(d.person.name||"Ansai ID")+".");return;}const box=$("idPick");box.innerHTML="";w.workspaces.forEach((ws)=>{const b=document.createElement("button");b.className="btn btn-ghost";b.style.width="100%";b.style.marginTop="6px";b.textContent=ws.name;b.onclick=async()=>{try{const d2=await post("/api/id-login",{businessId:ws.id});await loadHome();toast("Workspace open — signed in as "+(d2.person.name||"Ansai ID")+".");}catch(err2){if(err2.message&&err2.message.indexOf("member")!==-1){$("idMsg").textContent=err2.message;}else{$("idMsg").innerHTML='No Ansai ID session found. <a href="https://id.ansaitechnologies.co.ke/admin.html" target="_blank" rel="noopener">Sign in to Ansai ID</a> first, then come back and tap again.';}}};box.appendChild(b);});}catch(err){if(err.message&&err.message.indexOf("member")!==-1){$("idMsg").textContent=err.message;}else{$("idMsg").innerHTML='No Ansai ID session found. <a href="https://id.ansaitechnologies.co.ke/admin.html" target="_blank" rel="noopener">Sign in to Ansai ID</a> first, then come back and tap again.';}}};
 $("adCreate").onclick=async()=>{const msg=$("adMsg");try{const d=await post("/api/admin",{passcode:$("adPass").value,action:"create",name:$("adName").value,legal_form:$("adLegal").value,income_stream:$("adStream").value,owner_name:$("adOwner").value,kra_pin:$("adPin").value,access_code:$("adCode").value});
   msg.style.color="var(--ok)";msg.textContent="Workspace created for "+d.business.name+". Hand the owner the access code you just set.";}catch(err){msg.style.color="var(--bad)";msg.textContent=err.message;}};
 $("signOut").onclick=async()=>{await api("/api/session",{method:"POST"});BIZ=null;B=null;showGate();};
