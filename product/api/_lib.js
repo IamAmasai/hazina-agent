@@ -104,4 +104,33 @@ function totCSV(period, R) {
 }
 function fail(res, e) { res.status(500).json({ error: "server error", detail: String((e && e.message) || e).slice(0, 300) }); }
 
-module.exports = { RULES_VERSION, VAT_THRESHOLD, sha256, envReady, sb, list, insert, patch, del, setSessionCookie, clearSessionCookie, getSessionBusiness, logEvent, totRate, graduated, compute, packText, totCSV, fmt, fail };
+async function idPerson(req) {
+  try {
+    const cookie = (req.headers && req.headers.cookie) || "";
+    const m = cookie.match(/(?:^|;\s*)ansai_id_session=([^;]+)/);
+    if (!m) return null;
+    const value = m[1].trim();
+    if (!value) return null;
+    const base = process.env.ANSAI_ID_URL || "https://id.ansaitechnologies.co.ke";
+    const r = await fetch(base + "/session", { headers: { Cookie: "ansai_id_session=" + value } });
+    if (!r || r.status !== 200) return null;
+    let data = null;
+    try { data = await r.json(); } catch (_) { return null; }
+    const person = data && data.person;
+    if (!person || person.status !== "active") return null;
+    return person;
+  } catch (_) { return null; }
+}
+async function membershipsFor(personId) {
+  const rows = await list("hz_workspace_members", "person_id=eq." + personId + "&select=*");
+  const out = [];
+  for (const row of (rows || [])) {
+    const brows = await list("hz_businesses", "id=eq." + row.business_id + "&select=*");
+    const biz = brows && brows[0];
+    if (!biz) continue;
+    out.push({ business: biz, role: row.role });
+  }
+  return out;
+}
+
+module.exports = { RULES_VERSION, VAT_THRESHOLD, sha256, envReady, sb, list, insert, patch, del, setSessionCookie, clearSessionCookie, getSessionBusiness, idPerson, membershipsFor, logEvent, totRate, graduated, compute, packText, totCSV, fmt, fail };
