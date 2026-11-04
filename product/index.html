@@ -650,8 +650,8 @@ document.addEventListener("click",async e=>{
 document.addEventListener("change",async e=>{
   const el=e.target;
   if(el.id==="stmtFile"){const f=el.files[0];if(!f)return;
-    try{const txns=parseStatement(await f.text());await dataAct({action:"import_txns",monthId:B.month.id,txns});B=await api("/api/data?month="+B.month.id);CSTEP=2;renderMonth();toast("Statement read — "+txns.length+" lines imported.");}
-    catch(err){toast(err.message);}return;}
+    if(f.type&&f.type.indexOf("image/")===0){const rd=new FileReader();rd.onload=async()=>{const url=rd.result;toast("Reading the statement photo…");try{const d=await post("/api/stmt-extract",{image:url});const txns=parseStatement(d.csv);await dataAct({action:"import_txns",monthId:B.month.id,txns});B=await api("/api/data?month="+B.month.id);CSTEP=2;renderMonth();toast("Statement read — "+txns.length+" lines imported.");}catch(err){toast(err.message);}};rd.readAsDataURL(f);return;}
+    else{try{const txns=parseStatement(await f.text());await dataAct({action:"import_txns",monthId:B.month.id,txns});B=await api("/api/data?month="+B.month.id);CSTEP=2;renderMonth();toast("Statement read — "+txns.length+" lines imported.");}catch(err){toast(err.message);}}return;}
   if(el.id==="rcptFiles"){for(const f of el.files){const rd=new FileReader();
     rd.onload=async()=>{const url=rd.result;const sha=await sha256hex(url);NEWRC.push({id:"tmp"+Date.now()+Math.random().toString(36).slice(2,7),file_name:f.name,dataUrl:url,status:"new",items:[],sha256:sha});renderMonth();};
     rd.readAsDataURL(f);}return;}
