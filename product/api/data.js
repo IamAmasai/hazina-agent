@@ -71,11 +71,34 @@ module.exports = async (req, res) => {
       res.status(200).json({ txn: rows[0] }); return;
     }
     if (act === "set_txn") {
+      const found = await list("hz_txns", "id=eq." + b.txnId + "&month_id=eq." + month.id + "&select=*");
+      const row = (found || [])[0] || null;
+      if (!row) { res.status(404).json({ error: "line not found" }); return; }
       const upd = {};
       if (typeof b.is_business === "boolean") upd.is_business = b.is_business;
       if (typeof b.category === "string") upd.category = b.category || null;
+      const wantsAmount = typeof b.amount !== "undefined";
+      const wantsDetails = typeof b.details !== "undefined";
+      const wantsDate = typeof b.date !== "undefined";
+      if ((wantsAmount || wantsDetails || wantsDate) && row.source !== "manual") { res.status(400).json({ error: "Only hand-added lines can be edited. Statement lines change by re-importing the statement." }); return; }
+      if (wantsAmount) {
+        const amt = Math.abs(+b.amount);
+        if (!(amt > 0)) { res.status(400).json({ error: "Amount must be a number above zero." }); return; }
+        upd.amount = amt;
+      }
+      if (wantsDetails) upd.details = String(b.details || "");
+      if (wantsDate) upd.txn_date = b.date || null;
       const rows = await patch("hz_txns", "id=eq." + b.txnId + "&month_id=eq." + month.id, upd);
       res.status(200).json({ txn: (rows || [])[0] || null }); return;
+    }
+    if (act === "delete_txn") {
+      const found = await list("hz_txns", "id=eq." + b.txnId + "&month_id=eq." + month.id + "&select=*");
+      const row = (found || [])[0] || null;
+      if (!row) { res.status(404).json({ error: "line not found" }); return; }
+      if (row.source !== "manual") { res.status(400).json({ error: "Statement lines can't be removed one by one — re-importing the statement replaces them." }); return; }
+      await del("hz_txns", "id=eq." + b.txnId + "&month_id=eq." + month.id);
+      await logEvent(month.id, "merchant", "manual_txn_removed", "Hand-added line removed: " + row.details + " — KSh " + row.amount + ".");
+      res.status(200).json({ ok: true }); return;
     }
     if (act === "save_receipt") {
       const r = b.receipt || {};
@@ -163,6 +186,19 @@ module.exports = async (req, res) => {
     if (act === "reopen_month") {
       await patch("hz_months", "id=eq." + month.id, { status: "closing", closed_at: null });
       await logEvent(month.id, "merchant", "month_reopened", "Month reopened for changes.");
+      res.status(200).json({ ok: true }); return;
+    }
+    if (act === "reset_month") {
+      const txns = await list("hz_txns", "month_id=eq." + month.id + "&select=id");
+      const receipts = await list("hz_receipts", "month_id=eq." + month.id + "&select=id");
+      const nTxns = (txns || []).length;
+      const nReceipts = (receipts || []).length;
+      await del("hz_packs", "month_id=eq." + month.id);
+      await del("hz_questions", "month_id=eq." + month.id);
+      await del("hz_receipts", "month_id=eq." + month.id);
+      await del("hz_txns", "month_id=eq." + month.id);
+      await patch("hz_months", "id=eq." + month.id, { status: "open", closed_at: null });
+      await logEvent(month.id, "merchant", "month_reset", "Month started over by the merchant — " + nTxns + " statement/manual line(s), " + nReceipts + " receipt(s), and any answers and saved packs were cleared. The activity trail keeps this note.");
       res.status(200).json({ ok: true }); return;
     }
     if (act === "event") {
