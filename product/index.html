@@ -439,6 +439,7 @@ function overviewBody(){
    B.receipts.some(r=>r.status!=="confirmed")?"<p class='lede'>Some receipts aren't confirmed yet — unconfirmed paper can't be matched.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='receipts'>Confirm receipts</button></div>":
    !B.pack?"<p class='lede'>Everything is evidenced. Save the pack, then approve &amp; lock the month.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='close'>Finish the close</button></div>":
    "<p class='lede' style='margin:0'>Nothing outstanding — the month is fully evidenced and its pack is saved.</p>")+"</div>";
+  if(!locked()&&(B.txns.length||B.receipts.length||B.pack)){h+="<div class='card'><h2>Start this month over</h2>"+"<p class='lede'>This clears the statement, receipts, answers and saved packs for this month so you can begin again. The month itself stays. The reset is written into the activity trail. It cannot be undone.</p>"+"<div class='btnrow'><button class='btn btn-ghost' id='resetMonthBtn'>Start this month over</button></div></div>";}
   return h;}
 function ledgerBody(){
   let h="<div class='card'><h2>Ledger — "+B.txns.length+" lines</h2><p class='lede'>Statement lines are read by code, never typed. Cash and anything the statement misses can be added by hand below — Hazi keeps the two apart in the pack.</p>";
@@ -453,6 +454,7 @@ function ledgerBody(){
    (locked()?"":t.direction==="out"
      ?"<select class='mini' data-lcat='"+t.id+"'>"+["","supplies","wages","rent","transport","other","personal"].map(c=>"<option value='"+c+"'"+((t.category||"")===c?" selected":"")+">"+(c===""?"Classify…":c==="personal"?"Personal":c[0].toUpperCase()+c.slice(1))+"</option>").join("")+"</select>"
      :"<button class='btn btn-sm btn-ghost' data-notsale='"+t.id+"'>"+(off?"Counts as a sale":"Not a sale")+"</button>")+
+   ((!locked()&&t.source==="manual")?"<button class='btn btn-sm btn-ghost' data-tedit='"+t.id+"'>Edit</button>"+"<button class='btn btn-sm btn-ghost' data-tdel='"+t.id+"'>Remove</button>":"")+
    "</div>";}).join("");
   return h+"</div>";}
 function receiptCard(r,local){
@@ -485,7 +487,7 @@ function receiptCard(r,local){
   return h+"</div></div>";}
 function receiptsBody(){
   let h="<div class='card'><h2>Receipts — the paper</h2><p class='lede'>Photograph each receipt or invoice. Hazi reads it; <b>you confirm</b> before it counts. Confirmed receipts are saved to the workspace; the photos themselves stay on this device.</p>";
-  if(!locked())h+="<label class='drop'><span class='dic'>"+CAM+"</span><span><b>Photograph receipts</b><span>Camera or photo library</span></span><input type='file' id='rcptFiles' accept='image/*' multiple></label>";
+  if(!locked())h+="<label class='drop'><span class='dic'>"+CAM+"</span><span><b>Photograph receipts</b><span>Camera or photo library</span></span><input type='file' id='rcptFiles' accept='image/*,.jpg,.jpeg,.png,.webp,.heic,.heif' multiple></label>";
   h+=B.receipts.map(r=>receiptCard(r,false)).join("");
   h+=NEWRC.map(r=>receiptCard(r,true)).join("");
   if(!B.receipts.length&&!NEWRC.length)h+="<div class='alert alert-info'>"+INFO+"<div>No paper yet this month. If everything ran through M-Pesa with no receipts, that's fine — Hazi will ask about each payment line instead.</div></div>";
@@ -505,7 +507,8 @@ function closeBody(){
   let h="<div class='steps'>"+steps.map(st=>{
     let body="";
     if(st.n===1)body="<p class='lede'>Export the month from M-Pesa as a <b>CSV statement</b>. Hazi reads the lines itself — nothing is typed by hand, so nothing can be quietly altered.</p>"+
-     (locked()?"":"<label class='drop'><span class='dic'>"+DOC+"</span><span><b>"+(B.txns.length?"Replace the statement":"Add the M-Pesa statement")+"</b><span>Re-importing replaces the previous statement lines; hand-added lines stay</span></span><input type='file' id='stmtFile' accept='.csv,text/csv'></label>")+
+     (locked()?"":"<label class='drop'><span class='dic'>"+DOC+"</span><span><b>"+(B.txns.length?"Replace the statement":"Add the M-Pesa statement")+"</b><span>Re-importing replaces the previous statement lines; hand-added lines stay</span></span><input type='file' id='stmtFile' accept='.csv,.txt,.pdf,image/*,text/csv,text/plain,application/pdf'></label>")+
+     (locked()?"":"<details class='pastebox' style='margin-top:10px'><summary style='cursor:pointer;font-size:14.5px;color:var(--azure)'>Or paste the statement instead</summary><textarea id='stmtPaste' rows='5' style='margin-top:8px' placeholder='Paste the statement text here - the same CSV, pasted instead of picked as a file'></textarea><div class='btnrow'><button class='btn btn-primary btn-sm' id='stmtPasteBtn'>Import pasted statement</button></div></details>")+
      (B.txns.length?"<div class='btnrow'><button class='btn btn-primary btn-sm' data-cnext='2'>Continue</button></div>":"");
     if(st.n===2)body="<p class='lede'>Receipts are managed in the <b>Receipts tab</b> — photograph, let Hazi read, confirm. <b>"+conf.length+" confirmed</b> so far.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='receipts'>Open receipts</button>"+(conf.length?"<button class='btn btn-primary btn-sm' data-cnext='3'>Continue</button>":"")+"</div>";
     if(st.n===3)body="<p class='lede'>Hazi compares every confirmed receipt against the statement — <b>amount exact, date within three days, one-to-one</b>. Whatever has no receipt becomes a question only you can answer.</p>"+
@@ -630,6 +633,9 @@ document.addEventListener("click",async e=>{
   const act=e.target.closest("[data-act]");if(act){receiptAction(act.dataset.act,act.dataset.i);return;}
   const cat=e.target.closest("[data-cat]");if(cat){try{await dataAct({action:"answer",monthId:B.month.id,questionId:cat.dataset.qid,category:cat.dataset.cat});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Answer recorded.");}catch(err){toast(err.message);}return;}
   const ns=e.target.closest("[data-notsale]");if(ns){const t=txnById(ns.dataset.notsale);if(t){try{await dataAct({action:"set_txn",monthId:B.month.id,txnId:t.id,is_business:t.is_business===false,category:t.is_business===false?null:"not_sale"});B=await api("/api/data?month="+B.month.id);renderMonth();}catch(err){toast(err.message);}}return;}
+  const td=e.target.closest("[data-tdel]");if(td){const t=txnById(td.dataset.tdel);if(t){if(confirm("Remove this hand-added line? "+(t.details||"")+" — "+fmt0(t.amount))){try{await dataAct({action:"delete_txn",monthId:B.month.id,txnId:t.id});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Line removed.");}catch(err){toast(err.message);}}}return;}
+  const te=e.target.closest("[data-tedit]");if(te){const t=txnById(te.dataset.tedit);if(t){const a=prompt("Amount (KSh)",t.amount);if(a===null){return;}const v=parseFloat(a);if(!(v>0)){toast("Amount must be above zero.");return;}const d=prompt("Details",t.details||"");if(d===null){return;}const dt=prompt("Date (YYYY-MM-DD)",t.txn_date||"");if(dt===null){return;}try{await dataAct({action:"set_txn",monthId:B.month.id,txnId:t.id,amount:v,details:d,date:dt||null});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Line updated.");}catch(err){toast(err.message);}}return;}
+  if(e.target.closest("#resetMonthBtn")){if(confirm("Start "+monthName(B.month.period)+" over? The statement, receipts, answers and saved packs for this month will be cleared. This cannot be undone.")){try{await dataAct({action:"reset_month",monthId:B.month.id});B=await api("/api/data?month="+B.month.id);TAB="overview";renderMonth();toast("Month cleared — begin again in Close with Hazi.");}catch(err){toast(err.message);}}return;}
   const sugg=e.target.closest("[data-sugg]");if(sugg){$("askInput").value=sugg.dataset.sugg;$("askSend").click();return;}
   if(e.target.closest("#reconcileBtn")){const res=runMatch();try{await dataAct({action:"reconcile",monthId:B.month.id,matches:res.matches,questions:res.questions});B=await api("/api/data?month="+B.month.id);CSTEP=openQ().length?4:5;renderMonth();toast(res.matches.length+" matched · "+res.questions.length+" to answer");}catch(err){toast(err.message);}return;}
   if(e.target.closest("#savePackBtn")){try{await dataAct({action:"save_pack",monthId:B.month.id});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Pack saved — the figures are frozen in it.");}catch(err){toast(err.message);}return;}
@@ -637,6 +643,7 @@ document.addEventListener("click",async e=>{
   if(e.target.closest("#reopenBtn")||e.target.closest("#reopenBtn2")){try{await dataAct({action:"reopen_month",monthId:B.month.id});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Month reopened.");}catch(err){toast(err.message);}return;}
   if(e.target.closest("#dlPackBtn")){download("filing-pack-"+B.month.period+".md",B.pack.pack_text);return;}
   if(e.target.closest("#dlCsvBtn")){download("tot_values.csv",B.pack.tot_csv);return;}
+  if(e.target.closest("#stmtPasteBtn")){const txt=$("stmtPaste").value.trim();if(!txt){toast("Paste the statement text first.");return;}try{const txns=parseStatement(txt);await dataAct({action:"import_txns",monthId:B.month.id,txns});B=await api("/api/data?month="+B.month.id);CSTEP=2;renderMonth();toast("Statement read — "+txns.length+" lines imported.");}catch(err){toast(err.message);}return;}
   if(e.target.closest("#addTxnBtn")){const amtV=parseFloat($("mtAmount").value)||0;if(!amtV){toast("Add an amount first.");return;}
     try{await dataAct({action:"add_txn",monthId:B.month.id,date:$("mtDate").value||null,details:$("mtDetails").value||"Manual entry",amount:amtV,direction:$("mtDir").value});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Line added.");}catch(err){toast(err.message);}return;}
   if(e.target.closest("#askSend")){const inp=$("askInput");const q=(inp.value||"").trim();if(!q)return;inp.value="";
@@ -648,8 +655,8 @@ document.addEventListener("click",async e=>{
 document.addEventListener("change",async e=>{
   const el=e.target;
   if(el.id==="stmtFile"){const f=el.files[0];if(!f)return;
-    try{const txns=parseStatement(await f.text());await dataAct({action:"import_txns",monthId:B.month.id,txns});B=await api("/api/data?month="+B.month.id);CSTEP=2;renderMonth();toast("Statement read — "+txns.length+" lines imported.");}
-    catch(err){toast(err.message);}return;}
+    if(f.type&&f.type.indexOf("image/")===0){const rd=new FileReader();rd.onload=async()=>{const url=rd.result;toast("Reading the statement photo…");try{const d=await post("/api/stmt-extract",{image:url});const txns=parseStatement(d.csv);await dataAct({action:"import_txns",monthId:B.month.id,txns});B=await api("/api/data?month="+B.month.id);CSTEP=2;renderMonth();toast("Statement read — "+txns.length+" lines imported.");}catch(err){toast(err.message);}};rd.readAsDataURL(f);return;}
+    else{try{const txns=parseStatement(await f.text());await dataAct({action:"import_txns",monthId:B.month.id,txns});B=await api("/api/data?month="+B.month.id);CSTEP=2;renderMonth();toast("Statement read — "+txns.length+" lines imported.");}catch(err){toast(err.message);}}return;}
   if(el.id==="rcptFiles"){for(const f of el.files){const rd=new FileReader();
     rd.onload=async()=>{const url=rd.result;const sha=await sha256hex(url);NEWRC.push({id:"tmp"+Date.now()+Math.random().toString(36).slice(2,7),file_name:f.name,dataUrl:url,status:"new",items:[],sha256:sha});renderMonth();};
     rd.readAsDataURL(f);}return;}
