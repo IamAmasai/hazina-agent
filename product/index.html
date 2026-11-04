@@ -439,6 +439,7 @@ function overviewBody(){
    B.receipts.some(r=>r.status!=="confirmed")?"<p class='lede'>Some receipts aren't confirmed yet — unconfirmed paper can't be matched.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='receipts'>Confirm receipts</button></div>":
    !B.pack?"<p class='lede'>Everything is evidenced. Save the pack, then approve &amp; lock the month.</p><div class='btnrow'><button class='btn btn-sm btn-gold' data-jump='close'>Finish the close</button></div>":
    "<p class='lede' style='margin:0'>Nothing outstanding — the month is fully evidenced and its pack is saved.</p>")+"</div>";
+  if(!locked()&&(B.txns.length||B.receipts.length||B.pack)){h+="<div class='card'><h2>Start this month over</h2>"+"<p class='lede'>This clears the statement, receipts, answers and saved packs for this month so you can begin again. The month itself stays. The reset is written into the activity trail. It cannot be undone.</p>"+"<div class='btnrow'><button class='btn btn-ghost' id='resetMonthBtn'>Start this month over</button></div></div>";}
   return h;}
 function ledgerBody(){
   let h="<div class='card'><h2>Ledger — "+B.txns.length+" lines</h2><p class='lede'>Statement lines are read by code, never typed. Cash and anything the statement misses can be added by hand below — Hazi keeps the two apart in the pack.</p>";
@@ -453,6 +454,7 @@ function ledgerBody(){
    (locked()?"":t.direction==="out"
      ?"<select class='mini' data-lcat='"+t.id+"'>"+["","supplies","wages","rent","transport","other","personal"].map(c=>"<option value='"+c+"'"+((t.category||"")===c?" selected":"")+">"+(c===""?"Classify…":c==="personal"?"Personal":c[0].toUpperCase()+c.slice(1))+"</option>").join("")+"</select>"
      :"<button class='btn btn-sm btn-ghost' data-notsale='"+t.id+"'>"+(off?"Counts as a sale":"Not a sale")+"</button>")+
+   ((!locked()&&t.source==="manual")?"<button class='btn btn-sm btn-ghost' data-tedit='"+t.id+"'>Edit</button>"+"<button class='btn btn-sm btn-ghost' data-tdel='"+t.id+"'>Remove</button>":"")+
    "</div>";}).join("");
   return h+"</div>";}
 function receiptCard(r,local){
@@ -631,6 +633,9 @@ document.addEventListener("click",async e=>{
   const act=e.target.closest("[data-act]");if(act){receiptAction(act.dataset.act,act.dataset.i);return;}
   const cat=e.target.closest("[data-cat]");if(cat){try{await dataAct({action:"answer",monthId:B.month.id,questionId:cat.dataset.qid,category:cat.dataset.cat});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Answer recorded.");}catch(err){toast(err.message);}return;}
   const ns=e.target.closest("[data-notsale]");if(ns){const t=txnById(ns.dataset.notsale);if(t){try{await dataAct({action:"set_txn",monthId:B.month.id,txnId:t.id,is_business:t.is_business===false,category:t.is_business===false?null:"not_sale"});B=await api("/api/data?month="+B.month.id);renderMonth();}catch(err){toast(err.message);}}return;}
+  const td=e.target.closest("[data-tdel]");if(td){const t=txnById(td.dataset.tdel);if(t){if(confirm("Remove this hand-added line? "+(t.details||"")+" — "+fmt0(t.amount))){try{await dataAct({action:"delete_txn",monthId:B.month.id,txnId:t.id});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Line removed.");}catch(err){toast(err.message);}}}return;}
+  const te=e.target.closest("[data-tedit]");if(te){const t=txnById(te.dataset.tedit);if(t){const a=prompt("Amount (KSh)",t.amount);if(a===null){return;}const v=parseFloat(a);if(!(v>0)){toast("Amount must be above zero.");return;}const d=prompt("Details",t.details||"");if(d===null){return;}const dt=prompt("Date (YYYY-MM-DD)",t.txn_date||"");if(dt===null){return;}try{await dataAct({action:"set_txn",monthId:B.month.id,txnId:t.id,amount:v,details:d,date:dt||null});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Line updated.");}catch(err){toast(err.message);}}return;}
+  if(e.target.closest("#resetMonthBtn")){if(confirm("Start "+monthName(B.month.period)+" over? The statement, receipts, answers and saved packs for this month will be cleared. This cannot be undone.")){try{await dataAct({action:"reset_month",monthId:B.month.id});B=await api("/api/data?month="+B.month.id);TAB="overview";renderMonth();toast("Month cleared — begin again in Close with Hazi.");}catch(err){toast(err.message);}}return;}
   const sugg=e.target.closest("[data-sugg]");if(sugg){$("askInput").value=sugg.dataset.sugg;$("askSend").click();return;}
   if(e.target.closest("#reconcileBtn")){const res=runMatch();try{await dataAct({action:"reconcile",monthId:B.month.id,matches:res.matches,questions:res.questions});B=await api("/api/data?month="+B.month.id);CSTEP=openQ().length?4:5;renderMonth();toast(res.matches.length+" matched · "+res.questions.length+" to answer");}catch(err){toast(err.message);}return;}
   if(e.target.closest("#savePackBtn")){try{await dataAct({action:"save_pack",monthId:B.month.id});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Pack saved — the figures are frozen in it.");}catch(err){toast(err.message);}return;}
