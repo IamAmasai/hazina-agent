@@ -52,3 +52,12 @@ graded against. Raw business records are never committed to this repo (see
 
 Copy `.env.example` to `.env` and add your Meta Model API key. Keys live in
 `.env` only — never in code, never in git.
+
+## Try Hazina live — for hackathon judges
+
+Hazina is gated by design: real businesses enter with a workspace access code or an Ansai ID, and there is no self-signup. For judging, a demo workspace is open:
+
+- **Live app:** https://hazina.ansaitechnologies.co.ke
+- **Access code:** `demo2026` — workspace *Kijiji Groceries (Demo)*, sample books for a small Nairobi grocery
+- **October 2026 is closed:** 10 statement lines imported, 2 eTIMS receipts matched by the deterministic reconciler, and a Turnover Tax pack saved — **TOT KSh 6,180 on gross KSh 412,000**, with the pack's rules version and input hashes recorded.
+- **November 2026 is in progress:** add lines, save a receipt, ask Hazi a question, and run *Close with Hazi* yourself to see a pack being prepared.
