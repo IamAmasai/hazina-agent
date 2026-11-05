@@ -1,5 +1,5 @@
 const { envReady, getSessionBusiness, list, logEvent, compute, fmt, RULES_VERSION, fail, idPerson } = require("./_lib");
-const { observeAskHazi } = require("./threat/emit");
+const { observeAskHazi } = require("./_threat/emit");
 
 // Ask Hazi: Spark answers questions about ONE month, grounded in that month's
 // own record — ledger, receipts, answers, pack, event log — which the server

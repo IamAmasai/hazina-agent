@@ -1,5 +1,5 @@
 // Signal One tests — HAND-WRITTEN 2026-11-04 (Meta API window closed mid-
-// session; see api/threat/feed.js). Run: node tests/signal-one.test.js
+// session; see api/_threat/feed.js). Run: node tests/signal-one.test.js
 // Covers: detector precision on attack + legitimate batteries, the privacy
 // gate (structure + contamination), the hash-chained feed (verify + tamper),
 // and the emitter end-to-end (signal carries NO user text; evidence keeps it).
@@ -8,9 +8,9 @@ const os = require("os");
 const path = require("path");
 const assert = require("assert");
 
-const { detect } = require("../api/threat/detector");
-const { validateSignal } = require("../api/threat/privacy");
-const { createFeed } = require("../api/threat/feed");
+const { detect } = require("../api/_threat/detector");
+const { validateSignal } = require("../api/_threat/privacy");
+const { createFeed } = require("../api/_threat/feed");
 
 let pass = 0, failCount = 0;
 function t(name, fn) {
@@ -68,8 +68,8 @@ t("pattern summary contains no user text", () => {
 // ---------- privacy gate ----------
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "sigone-"));
 process.env.HAZINA_THREAT_DIR = tmp;
-delete require.cache[require.resolve("../api/threat/emit")];
-const { observeAskHazi, buildSignal } = require("../api/threat/emit");
+delete require.cache[require.resolve("../api/_threat/emit")];
+const { observeAskHazi, buildSignal } = require("../api/_threat/emit");
 
 function goodSignal() {
   return buildSignal(

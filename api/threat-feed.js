@@ -1,12 +1,12 @@
 // Signal One — collector read endpoint for the estate threat feed.
-// HAND-WRITTEN 2026-11-04 (see api/threat/feed.js header).
+// HAND-WRITTEN 2026-11-04 (see api/_threat/feed.js header).
 // GET /api/threat-feed?since=<seq> with header  x-threat-feed-token: <secret>
 // The secret is env THREAT_FEED_TOKEN, set by the founder; without it the
 // endpoint is closed (503) and without the token a poll is refused (401).
 // Sentinel (on the founder's hardware) is the intended poller: it collects
 // entries into the estate feed and runs the WhatsApp notice threshold.
 // Response: { ok, head: { count, head_hash }, verify_ok, entries: [...] }
-const { getFeed } = require("./threat/emit");
+const { getFeed } = require("./_threat/emit");
 
 module.exports = async (req, res) => {
   if (req.method !== "GET") { res.status(405).json({ error: "method not allowed" }); return; }
