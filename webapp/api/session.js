@@ -1,10 +1,13 @@
-const { passcodeHash, passcodeOk } = require("./_lib");
-
+const { envReady, getSessionBusiness, clearSessionCookie, idPerson, fail } = require("./_lib");
 module.exports = async (req, res) => {
-  const gate = !!passcodeHash();
-  res.status(200).json({
-    gate,
-    authed: passcodeOk(req),
-    modelKey: !!process.env.MODEL_API_KEY,
-  });
+  try {
+    if (req.method === "POST") { clearSessionCookie(res); res.status(200).json({ ok: true }); return; }
+    const biz = await getSessionBusiness(req);
+    const person = await idPerson(req);
+    res.status(200).json({
+      env: { db: envReady(), modelKey: !!process.env.MODEL_API_KEY, admin: !!process.env.HAZINA_ADMIN_PASSCODE },
+      business: biz ? { id: biz.id, name: biz.name, legalForm: biz.legal_form, stream: biz.income_stream } : null,
+      person: person ? { id: person.id, name: person.name } : null,
+    });
+  } catch (e) { fail(res, e); }
 };

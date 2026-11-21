@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hazina — How it works</title>
+<meta name="description" content="Hazina keeps a small business's books the way KRA now expects them: M-Pesa statements and paper receipts in, reconciled books and a filing pack out. How it works, where your data goes, and how you sign in.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="ui-kit.css">
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--color-bg);color:var(--color-ink);margin:0;font-size:15.5px;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 64px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 0 6px}
+  .brand{font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-.01em;color:var(--color-ink);text-decoration:none}
+  .brand span{color:var(--azure-darker)}
+  .signin-link{font-weight:600;font-size:14px;color:var(--azure-darker);text-decoration:none;border:1px solid var(--border,#D9E4F0);padding:8px 14px;border-radius:999px;background:var(--surface)}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:34px;line-height:1.15;letter-spacing:-.01em;margin:26px 0 10px}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:23px;line-height:1.25;margin:0 0 8px}
+  .lede{color:var(--ink-muted);font-size:16.5px;margin:0 0 18px;max-width:58ch}
+  section{margin-top:38px;animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+  section:nth-of-type(2){animation-delay:.06s} section:nth-of-type(3){animation-delay:.12s}
+  section:nth-of-type(4){animation-delay:.18s} section:nth-of-type(5){animation-delay:.24s}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){section{animation:none}}
+  .intro{color:var(--ink-muted);margin:0 0 14px;max-width:62ch}
+  .cards{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:640px){.cards{grid-template-columns:1fr 1fr}}
+  .card{background:var(--surface);border:1px solid var(--border,#D9E4F0);border-radius:16px;padding:18px 18px 14px;box-shadow:0 1px 2px rgba(13,27,42,.04)}
+  .card h3{margin:0 0 6px;font-size:15.5px;font-weight:700}
+  .card p{margin:0;color:var(--ink-muted);font-size:14.5px}
+  ol.steps{margin:6px 0 0;padding:0;list-style:none;counter-reset:step}
+  ol.steps li{counter-increment:step;position:relative;padding:12px 0 12px 46px;border-bottom:1px solid var(--border,#D9E4F0)}
+  ol.steps li:last-child{border-bottom:0}
+  ol.steps li::before{content:counter(step);position:absolute;left:0;top:10px;width:30px;height:30px;border-radius:50%;background:var(--azure-darker);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+  ol.steps b{display:block;font-size:15px}
+  ol.steps span{color:var(--ink-muted);font-size:14.5px}
+  .offer{border-radius:18px;padding:22px 20px;color:#EAF2FF;background:linear-gradient(150deg,#0A2540,#123a6e 55%,#1D4ED8);position:relative;overflow:hidden}
+  .offer::after{content:"";position:absolute;width:320px;height:320px;border-radius:50%;right:-110px;top:-150px;background:radial-gradient(circle,rgba(242,193,78,.35),transparent 65%)}
+  .offer h2{color:#fff}
+  .offer p{color:#C9DDF7;margin:0 0 14px;max-width:56ch;position:relative;z-index:1}
+  .offer .btnrow{position:relative;z-index:1}
+  .btn{display:inline-block;font-weight:700;font-size:14.5px;text-decoration:none;padding:11px 18px;border-radius:12px}
+  .btn-gold{background:#F2C14E;color:#0D1B2A}
+  .btn-light{background:#fff;color:#123a6e}
+  .btn-ghost{border:1px solid var(--border,#D9E4F0);color:var(--azure-darker);background:var(--surface)}
+  ul.plain{margin:6px 0 0;padding-left:20px;color:var(--ink-muted)}
+  ul.plain li{margin:7px 0}
+  ul.plain b{color:var(--color-ink)}
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border,#D9E4F0);color:var(--ink-muted);font-size:13.5px}
+  footer a{color:var(--azure-darker);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="brand" href="/">Hazina<span>.</span></a>
+    <a class="signin-link" href="/">Sign in →</a>
+  </div>
+
+  <h1>Your books, closed properly — every month.</h1>
+  <p class="lede">Hazina is bookkeeping for small and micro traders in Kenya. M-Pesa statements and paper receipts go in; reconciled books and a KRA filing pack come out — with <b>Hazi</b>, the agent, doing the month-end beside you. This page explains how it works, where your data goes, and how you sign in.</p>
+
+  <section>
+    <h2>What Hazina does</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Reads your M-Pesa statement</h3>
+        <p>Upload the statement file, paste the text, or photograph it. Every line lands in your month's ledger, in the order it happened.</p>
+      </div>
+      <div class="card">
+        <h3>Reads your receipts</h3>
+        <p>Photograph a paper receipt and Hazina reads the vendor, date and amount. Nothing counts until you confirm the reading — the figures are always yours to correct.</p>
+      </div>
+      <div class="card">
+        <h3>Reconciles the month</h3>
+        <p>Receipts are matched to statement lines, business money is separated from personal money, and anything unclear becomes a question for you — never a guess.</p>
+      </div>
+      <div class="card">
+        <h3>Builds your filing pack</h3>
+        <p>Your tax position is computed from the current KRA rules — Turnover Tax where it applies — and saved as a pack you file from. Hazina prepares the pack; the filing itself stays with you.</p>
+      </div>
+      <div class="card">
+        <h3>Ask Hazi</h3>
+        <p>Ask about your own month in plain words — what came in, what a figure is made of, what is still missing — and Hazi answers from your record, quoting your figures exactly.</p>
+      </div>
+      <div class="card">
+        <h3>Locks the month</h3>
+        <p>A closed month is locked with its pack and a full activity record, so what was filed can always be shown again, exactly as it was.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How a month works</h2>
+    <ol class="steps">
+      <li><b>Send the statement</b><span>File, pasted text, or a photo of your M-Pesa statement for the month.</span></li>
+      <li><b>Add the receipts</b><span>Photograph paper receipts as you go, or add them all at month-end.</span></li>
+      <li><b>Hazi drafts the close</b><span>Lines are sorted, receipts matched, and anything unclear is asked as a question.</span></li>
+      <li><b>You confirm</b><span>Answer the questions and confirm the readings. You approve the month — Hazi does not close it alone.</span></li>
+      <li><b>Close and keep the pack</b><span>The month locks and the filing pack is saved with it, ready for your KRA filing.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="offer">
+      <h2>Your first month's close is free</h2>
+      <p>The full close — statement read, receipts matched, questions answered, filing pack saved. No card, no commitment. After your free first month, each month's close is KSh 999 — pay per close, no contract, stop any time.</p>
+      <div class="btnrow">
+        <a class="btn btn-gold" href="mailto:hello@ansaitechnologies.co.ke?subject=Hazina%20—%20free%20first%20close">Ask for a workspace</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where your data goes</h2>
+    <p class="intro">Your books are your business's private record. Here is exactly where each part of them goes:</p>
+    <ul class="plain">
+      <li><b>Your records stay in your workspace.</b> Statement lines, receipts' details, months and filing packs are stored in our database in the European Union, inside your business's own workspace.</li>
+      <li><b>Photos are read once and never kept.</b> When you photograph a receipt or a statement, the picture is read to extract the figures, and only the figures are saved — together with a fingerprint of the file. The image itself is not stored.</li>
+      <li><b>A model does the reading; our code does the books.</b> Receipt and statement photos, and your questions to Hazi, are processed by a model service (Meta's). Every figure in your books and your tax pack is computed by Hazina's own code, from the record you confirmed.</li>
+      <li><b>Only your workspace opens your books.</b> Your records are reachable only through your sign-in — your Ansai ID, or your business's access code. Do not share the code.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>How you sign in</h2>
+    <p class="intro">Two ways in — use either:</p>
+    <div class="cards">
+      <div class="card">
+        <h3>With Ansai ID</h3>
+        <p>If you have an Ansai ID — one enrolment that signs you in across Ansai Technologies apps — choose <b>Continue with Ansai ID</b> on the sign-in page, and then pick your business's workspace.</p>
+      </div>
+      <div class="card">
+        <h3>With your workspace access code</h3>
+        <p>Every business workspace has its own access code, given to you when the workspace is created. Enter it on the sign-in page and you are straight into your books.</p>
+      </div>
+    </div>
+    <p class="intro" style="margin-top:14px">No workspace yet? <a href="mailto:hello@ansaitechnologies.co.ke?subject=Hazina%20—%20free%20first%20close" style="color:var(--azure-darker);font-weight:600">Write to us</a> and we will set one up — your first month's close is free.</p>
+    <p><a class="btn btn-ghost" href="/">Go to sign in →</a></p>
+  </section>
+
+  <footer>
+    Hazina — a product of <b>Ansai Technologies</b>, Nairobi. Questions: <a href="mailto:hello@ansaitechnologies.co.ke">hello@ansaitechnologies.co.ke</a>
+  </footer>
+</div>
+</body>
+</html>
