@@ -1,0 +1,25 @@
+# Hazina
+
+> Hazina is bookkeeping for small and micro traders in Kenya, by Ansai Technologies. M-Pesa statements and paper receipts go in; reconciled books and a KRA filing pack come out, with Hazi, the embedded agent, doing the month-end beside the owner.
+
+## How it works
+
+- The owner sends the month's M-Pesa statement as a file, pasted text, or a photo, and photographs paper receipts.
+- Hazi reads them, matches receipts to statement lines, separates business money from personal money, and asks the owner about anything unclear. The owner confirms every reading and approves the close — Hazi never closes a month alone.
+- The tax position is computed from the current KRA rules (Turnover Tax: 1.5% of gross sales for the KSh 1M–25M band, monthly) and saved as a filing pack with the locked month. Hazina prepares the pack; the owner files it.
+
+## Offer
+
+- A business's first month's close is free — the full close, filing pack included. After that, a simple monthly fee is agreed directly before the second month.
+
+## Data
+
+- Records (statement lines, receipt details, months, packs) stay in the business's own workspace in Ansai's database (EU).
+- Photos of receipts and statements are read once to extract the figures and are never stored; only the figures and a file fingerprint are kept.
+- Sign-in: with Ansai ID, or with the workspace's own access code.
+
+## Links
+
+- [Hazina](https://hazina.ansaitechnologies.co.ke)
+- [How Hazina works — full explainer](https://hazina.ansaitechnologies.co.ke/about.html)
+- Contact: hello@ansaitechnologies.co.ke
