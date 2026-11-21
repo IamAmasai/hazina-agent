@@ -16,12 +16,32 @@
      the caller's Google account by its access code, once, then open it.
      A workspace already linked to a different email is refused — a code
      can never move someone else's books onto your account.
+   POST /api/auth {action:"create", name}         -> self-serve sign-up
+     (founder's live finding, 2026-11-21: a new Google user was told to
+     enter an access code they could not have — creation was admin-only).
+     Creates a workspace owned by the caller's verified email, generates
+     its recovery access code server-side (only the sha256 is stored),
+     returns the code ONCE in the response for the owner to save, sets
+     the workspace session and opens it. The code door below stays the
+     recovery path back in if Google access is ever lost.
 
    Failures land on a plain page that says what happened in words —
    never a stack, never a silent bounce. */
 
-const { envReady, list, patch, sha256, setSessionCookie, clearSessionCookie, fail } = require("./_lib");
+const crypto = require("crypto");
+const { envReady, list, insert, patch, sha256, setSessionCookie, clearSessionCookie, fail } = require("./_lib");
 const google = require("./_google");
+
+/* Recovery access codes: 16 characters from an alphabet with no
+   look-alikes (no I, L, O, 0, 1), grouped in fours so a person can read
+   the code back and type it exactly as shown — the code doors hash the
+   string exactly as typed, dashes included. */
+const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function newRecoveryCode() {
+  const chars = [];
+  for (let i = 0; i < 16; i++) chars.push(CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)]);
+  return chars.join("").replace(/(.{4})(?=.)/g, "$1-");
+}
 
 function errorPage(res, message) {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -72,6 +92,29 @@ module.exports = async (req, res) => {
         if (!google.ownsBusiness(person, biz)) { res.status(403).json({ error: "That workspace isn't linked to your Google account." }); return; }
         setSessionCookie(res, biz);
         res.status(200).json({ ok: true, business: { id: biz.id, name: biz.name } });
+        return;
+      }
+
+      if (body.action === "create") {
+        const name = String(body.name || "").trim();
+        if (name.length < 2 || name.length > 80) {
+          res.status(400).json({ error: "Give your business a name — 2 to 80 characters." });
+          return;
+        }
+        const recoveryCode = newRecoveryCode();
+        const rows = await insert("hz_businesses", [{
+          name,
+          legal_form: "sole_trader",
+          income_stream: "trading",
+          kra_pin: null,
+          owner_name: person.name || null,
+          owner_email: person.email,
+          access_code_hash: sha256(recoveryCode)
+        }]);
+        const biz = rows && rows[0];
+        if (!biz || !biz.id) { res.status(500).json({ error: "The workspace could not be created. Nothing was saved — please try again." }); return; }
+        setSessionCookie(res, biz);
+        res.status(200).json({ ok: true, business: { id: biz.id, name: biz.name }, recoveryCode });
         return;
       }
 

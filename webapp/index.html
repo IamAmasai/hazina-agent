@@ -482,22 +482,29 @@ function download(name,text){const a=document.createElement("a");a.href=URL.crea
 
 // ---- gate / home ----
 function showGate(){$("gateView").classList.remove("hidden");$("homeView").classList.add("hidden");$("monthView").classList.add("hidden");$("signOut").classList.add("hidden");$("hBiz").textContent="Welcome";}
-// ---- the Google door: linked workspaces, one-time linking by access code ----
+// ---- the Google door: create your own workspace (recovery code shown
+// once), open a linked one, or link an existing one by access code ----
 function linkFormHtml(){return '<div style="margin-top:10px"><input id="gLinkCode" type="password" placeholder="Workspace access code" autocomplete="current-password" style="text-align:center"><div style="margin-top:9px"><button id="gLinkBtn" class="btn btn-secondary" style="width:100%">Link &amp; open workspace</button></div></div>';}
 function wireLinkForm(){const b=$("gLinkBtn");if(!b)return;const inp=$("gLinkCode");if(inp)inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();b.click();}};b.onclick=async()=>{try{$("gMsg").textContent="";await post("/api/auth",{action:"link",code:inp?inp.value:""});await loadHome();toast("Workspace linked & open.");}catch(err){$("gMsg").textContent=err.message;}};}
+function createFormHtml(){return '<div style="margin-top:10px"><input id="gCreateName" type="text" placeholder="Business name" autocomplete="organization" style="text-align:center"><div style="margin-top:9px"><button id="gCreateBtn" class="btn btn-primary" style="width:100%">Create your workspace</button></div></div>';}
+function wireCreateForm(){const b=$("gCreateBtn");if(!b)return;const inp=$("gCreateName");if(inp)inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();b.click();}};b.onclick=async()=>{try{$("gMsg").textContent="";b.disabled=true;const r=await post("/api/auth",{action:"create",name:inp?inp.value:""});showRecoveryCode(r.recoveryCode);}catch(err){b.disabled=false;$("gMsg").textContent=err.message;}};}
+function showRecoveryCode(code){const area=$("gArea");if(!area)return;let h='<div style="font-size:13.5px;text-align:center;color:var(--ink)">Your workspace is created.</div>';h+='<p style="font-size:13px;color:var(--mut);text-align:center;margin:10px 0 2px">Save this recovery code — it is the only way back in if you lose Google access. Type it exactly as shown, dashes included.</p>';h+='<div style="margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:10px;font-size:19px;font-weight:700;letter-spacing:1.5px;text-align:center">'+esc(code||"")+'</div>';h+='<button type="button" id="gSavedBtn" class="btn btn-primary" style="width:100%">I have saved it — open my workspace</button>';area.innerHTML=h;const b=$("gSavedBtn");if(b)b.onclick=async()=>{try{await loadHome();toast("Workspace open.");}catch(err){$("gMsg").textContent=err.message;}};}
 function renderGoogleArea(person,businesses){
   const area=$("gArea");if(!area)return;
   let h='<div style="font-size:13.5px;text-align:center;color:var(--ink)">Signed in as <b>'+esc(person.name||person.email)+'</b>'+(person.name&&person.email?'<br><span style="opacity:.65;font-size:12.5px">'+esc(person.email)+'</span>':'')+'</div>';
   if(businesses&&businesses.length){
     h+='<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">'+businesses.map(b=>'<button type="button" class="btn btn-primary gpick" data-bid="'+esc(b.id)+'" style="width:100%">Open '+esc(b.name)+'</button>').join("")+'</div>';
+    h+='<details><summary>Create another workspace</summary>'+createFormHtml()+'</details>';
     h+='<details><summary>Link another workspace with its access code</summary>'+linkFormHtml()+'</details>';
   }else{
-    h+='<p style="font-size:13px;color:var(--mut);text-align:center;margin:10px 0 2px">No workspace is linked to this Google account yet. Link yours with its access code — once, and it opens here from then on.</p>'+linkFormHtml();
+    h+='<p style="font-size:13px;color:var(--mut);text-align:center;margin:10px 0 2px">New to Hazina? Create your workspace — a business name is all it takes. You get a recovery code to save, and the workspace opens here from then on.</p>'+createFormHtml();
+    h+='<p style="font-size:13px;color:var(--mut);text-align:center;margin:16px 0 2px">Already have a workspace? Link it with its access code — once, and it opens here from then on.</p>'+linkFormHtml();
   }
   h+='<div style="text-align:center;margin-top:12px"><a href="/api/auth?provider=google&step=signout" style="font-size:12.5px;color:var(--mut)">Sign out of Google</a></div>';
   area.innerHTML=h;
   area.querySelectorAll(".gpick").forEach(btn=>{btn.onclick=async()=>{try{$("gMsg").textContent="";await post("/api/auth",{action:"open",businessId:btn.dataset.bid});await loadHome();toast("Workspace open.");}catch(err){$("gMsg").textContent=err.message;}};});
   wireLinkForm();
+  wireCreateForm();
 }
 async function loadHome(){
   const d=await api("/api/data");
