@@ -4,8 +4,11 @@
    verification against a test JWKS (valid, wrong audience, expired,
    wrong key), the code exchange through the stubbed HTTP seam,
    business ownership by verified email, the identity upsert's
-   no-Supabase path, and the auth handler's open/link bridge over a
-   stubbed _lib. No test ever calls Google or the database.
+   no-Supabase path, the auth handler's open/link bridge over a
+   stubbed _lib, and the self-serve create action (Google session
+   required, name validated, recovery code stored only as its sha256,
+   session set) plus the gate UI's create/link ordering. No test ever
+   calls Google or the database.
    Run: node tests/google-auth.test.js */
 const assert = require("node:assert");
 const crypto = require("node:crypto");
@@ -144,8 +147,16 @@ function b64url(buf) { return Buffer.from(buf).toString("base64url"); }
     { id: "biz-free", name: "Unlinked Ltd", access_code_hash: sha256("free-code"), owner_email: null }
   ];
   const patchCalls = [];
+  const insertCalls = [];
   const fakeLib = {
     envReady: () => true,
+    async insert(table, rows) {
+      assert.equal(table, "hz_businesses");
+      insertCalls.push(rows);
+      const row = { id: "biz-new-" + insertCalls.length, ...rows[0] };
+      businesses.push(row);
+      return [row];
+    },
     async list(table, q) {
       assert.equal(table, "hz_businesses");
       let rows = businesses.slice();
@@ -243,6 +254,60 @@ function b64url(buf) { return Buffer.from(buf).toString("base64url"); }
   assert.equal(wres.statusCode, 200);
   assert.deepEqual(wres.body.businesses.map(b => b.id).sort(), ["biz-free", "biz-mine"]);
   assert.equal(wres.body.person.email, "owner@example.com");
+
+  /* ---- self-serve create: a Google user with no code signs up ---- */
+  // no Google session -> 401, nothing inserted
+  r = await post({ action: "create", name: "New Shop" }, null);
+  assert.equal(r.statusCode, 401);
+  assert.equal(insertCalls.length, 0);
+
+  // name validation: blank, 1 char and 81 chars -> 400, nothing inserted
+  const countBefore = businesses.length;
+  for (const bad of ["", "   ", "x", "y".repeat(81)]) {
+    r = await post({ action: "create", name: bad }, myCookie);
+    assert.equal(r.statusCode, 400);
+  }
+  assert.equal(businesses.length, countBefore);
+  assert.equal(insertCalls.length, 0);
+
+  // a real create: owned by the verified email, session set, code hashed
+  r = await post({ action: "create", name: "  New Shop  " }, myCookie);
+  assert.equal(r.statusCode, 200);
+  assert.equal(r.body.ok, true);
+  assert.equal(r.body.business.name, "New Shop");
+  const created = businesses.find(b => b.id === r.body.business.id);
+  assert.ok(created);
+  assert.equal(created.name, "New Shop");
+  assert.equal(created.owner_email, "owner@example.com");
+  assert.equal(created.owner_name, "Test Owner");
+  assert.equal(created.legal_form, "sole_trader");
+  assert.equal(created.income_stream, "trading");
+  const recovery = r.body.recoveryCode;
+  assert.ok(typeof recovery === "string" && recovery.length >= 12);
+  assert.ok(/^[A-Z2-9-]+$/.test(recovery));
+  assert.notEqual(created.access_code_hash, recovery);
+  assert.equal(created.access_code_hash, sha256(recovery));
+  assert.ok(String(r.headers["set-cookie"]).startsWith("hz_session=" + created.id + "."));
+
+  // the created workspace opens for its creator like any linked one
+  r = await post({ action: "open", businessId: created.id }, myCookie);
+  assert.equal(r.statusCode, 200);
+
+  // its recovery code cannot move it to a different Google account -> 409
+  const otherCookie = "hz_google=" + encodeURIComponent(google.signSession({ sub: "555000", email: "second@example.com", name: "Second Person" }));
+  patchCalls.length = 0;
+  r = await post({ action: "link", code: recovery }, otherCookie);
+  assert.equal(r.statusCode, 409);
+  assert.equal(patchCalls.length, 0);
+
+  /* ---- the gate UI: create first, link below, recovery wording ---- */
+  const fs = require("node:fs");
+  const page = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  assert.ok(page.includes("Create your workspace"));
+  assert.ok(page.includes('action:"create"'));
+  assert.ok(page.includes("Save this recovery code"));
+  assert.ok(page.includes("Already have a workspace?"));
+  assert.ok(page.indexOf("Create your workspace") < page.indexOf("Already have a workspace?"));
 
   console.log("google-auth.test.js: all assertions passed");
 })().catch(e => { console.error(e); process.exit(1); });
