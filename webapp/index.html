@@ -98,6 +98,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 #gateView .gatecard #gateMsg{font-size:12.5px;line-height:1.5;text-align:center;min-height:1.2em;margin-top:10px;color:var(--mut)}
 #gateView .gatecard #idMsg{font-size:12.5px;line-height:1.5;text-align:center;margin-top:8px;color:var(--mut)}
 #gateView .gatecard #idPick{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+#gateView .gatecard #gMsg{font-size:12.5px;line-height:1.5;text-align:center;min-height:1.2em;margin-top:10px;color:var(--mut)}
+#gateView .gatecard #gArea:empty{display:none}
+#gateView .gatecard #gArea{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+#gateView .gatecard #gArea details{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+#gateView .gatecard #gArea summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--mut);text-align:center;list-style:none}
+#gateView .gatecard #gArea summary::-webkit-details-marker{display:none}
+#gateView .gatecard #gArea summary::marker{content:""}
+#gateView .gatecard .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600;text-decoration:none}
+#gateView .gatecard .gbtn:hover{border-color:var(--azure)}
 #gateView .gatecard details{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
 #gateView .gatecard summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--mut);text-align:center;list-style:none}
 #gateView .gatecard summary::-webkit-details-marker{display:none}
@@ -304,7 +313,11 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
         <div class="card gatecard">
           <div class="mark"><svg viewBox="0 0 48 48" fill="none"><path d="M10 8a2 2 0 012-2h24a2 2 0 012 2v34l-5-3.4L28 42l-4-3-4 3-5-3.4L10 42z" fill="rgba(255,255,255,.14)"/><path d="M17 15h14M17 21h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M17.5 30.5l3.6 3.6L29 26.5" stroke="#F2C14E" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <h2>Open your books</h2>
-          <p>Enter your business's access code to open its workspace. Your books live here — every month, every receipt, every answer.</p>
+          <p>Sign in with Google — the first sign-in creates your account, and a linked workspace opens right here. Your books live here — every month, every receipt, every answer.</p>
+          <a id="gBtn" class="btn gbtn" href="/api/auth?provider=google&step=start" style="width:100%"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>Continue with Google</a>
+          <div id="gArea"></div>
+          <div id="gMsg" style="font-size:13px;color:var(--bad);font-weight:600;margin-top:9px;text-align:center"></div>
+          <div style="text-align:center;font-size:13px;opacity:.65;margin:14px 0 8px">— or use your workspace access code —</div>
           <input id="gateCode" type="password" placeholder="Access code" autocomplete="current-password" style="text-align:center">
           <div style="margin-top:13px"><button id="gateBtn" class="btn btn-primary" style="width:100%">Open workspace</button></div>
           <div id="gateMsg" style="font-size:13px;color:var(--bad);font-weight:600;margin-top:9px;text-align:center"></div>
@@ -405,6 +418,7 @@ const DOC='<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-lineca
 
 // ---- state ----
 let ENV={db:false,modelKey:false,admin:false};
+let GOOGLE=null; // the verified Google session at the gate, if any {name,email}
 let BIZ=null, MONTHS=[], PACKS={}, B=null; // B = open month bundle {month,txns,receipts,questions,events,pack}
 let TAB="overview", CSTEP=1, NEWRC=[], ASKTHREAD=[], GASKTHREAD=[];
 const locked=()=>B&&B.month.status==="closed";
@@ -468,6 +482,23 @@ function download(name,text){const a=document.createElement("a");a.href=URL.crea
 
 // ---- gate / home ----
 function showGate(){$("gateView").classList.remove("hidden");$("homeView").classList.add("hidden");$("monthView").classList.add("hidden");$("signOut").classList.add("hidden");$("hBiz").textContent="Welcome";}
+// ---- the Google door: linked workspaces, one-time linking by access code ----
+function linkFormHtml(){return '<div style="margin-top:10px"><input id="gLinkCode" type="password" placeholder="Workspace access code" autocomplete="current-password" style="text-align:center"><div style="margin-top:9px"><button id="gLinkBtn" class="btn btn-secondary" style="width:100%">Link &amp; open workspace</button></div></div>';}
+function wireLinkForm(){const b=$("gLinkBtn");if(!b)return;const inp=$("gLinkCode");if(inp)inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();b.click();}};b.onclick=async()=>{try{$("gMsg").textContent="";await post("/api/auth",{action:"link",code:inp?inp.value:""});await loadHome();toast("Workspace linked & open.");}catch(err){$("gMsg").textContent=err.message;}};}
+function renderGoogleArea(person,businesses){
+  const area=$("gArea");if(!area)return;
+  let h='<div style="font-size:13.5px;text-align:center;color:var(--ink)">Signed in as <b>'+esc(person.name||person.email)+'</b>'+(person.name&&person.email?'<br><span style="opacity:.65;font-size:12.5px">'+esc(person.email)+'</span>':'')+'</div>';
+  if(businesses&&businesses.length){
+    h+='<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">'+businesses.map(b=>'<button type="button" class="btn btn-primary gpick" data-bid="'+esc(b.id)+'" style="width:100%">Open '+esc(b.name)+'</button>').join("")+'</div>';
+    h+='<details><summary>Link another workspace with its access code</summary>'+linkFormHtml()+'</details>';
+  }else{
+    h+='<p style="font-size:13px;color:var(--mut);text-align:center;margin:10px 0 2px">No workspace is linked to this Google account yet. Link yours with its access code — once, and it opens here from then on.</p>'+linkFormHtml();
+  }
+  h+='<div style="text-align:center;margin-top:12px"><a href="/api/auth?provider=google&step=signout" style="font-size:12.5px;color:var(--mut)">Sign out of Google</a></div>';
+  area.innerHTML=h;
+  area.querySelectorAll(".gpick").forEach(btn=>{btn.onclick=async()=>{try{$("gMsg").textContent="";await post("/api/auth",{action:"open",businessId:btn.dataset.bid});await loadHome();toast("Workspace open.");}catch(err){$("gMsg").textContent=err.message;}};});
+  wireLinkForm();
+}
 async function loadHome(){
   const d=await api("/api/data");
   BIZ=d.business;MONTHS=d.months;PACKS=d.packs||{};
@@ -818,7 +849,7 @@ $("gateBtn").onclick=async()=>{try{await post("/api/login",{code:$("gateCode").v
 $("idBtn").onclick=async()=>{try{$("idMsg").textContent="";$("idPick").innerHTML="";const w=await api("/api/id-workspaces");if(!w.workspaces||w.workspaces.length===0){$("idMsg").textContent="This Ansai ID isn't a member of any Hazina workspace yet.";return;}if(w.workspaces.length===1){const d=await post("/api/id-login",{});await loadHome();toast("Workspace open — signed in as "+(d.person.name||"Ansai ID")+".");return;}const box=$("idPick");box.innerHTML="";w.workspaces.forEach((ws)=>{const b=document.createElement("button");b.className="btn btn-ghost";b.style.width="100%";b.style.marginTop="6px";b.textContent=ws.name;b.onclick=async()=>{try{const d2=await post("/api/id-login",{businessId:ws.id});await loadHome();toast("Workspace open — signed in as "+(d2.person.name||"Ansai ID")+".");}catch(err2){if(err2.message&&err2.message.indexOf("member")!==-1){$("idMsg").textContent=err2.message;}else{$("idMsg").innerHTML='No Ansai ID session found. <a href="https://id.ansaitechnologies.co.ke/admin.html" target="_blank" rel="noopener">Sign in to Ansai ID</a> first, then come back and tap again.';}}};box.appendChild(b);});}catch(err){if(err.message&&err.message.indexOf("member")!==-1){$("idMsg").textContent=err.message;}else{$("idMsg").innerHTML='No Ansai ID session found. <a href="https://id.ansaitechnologies.co.ke/admin.html" target="_blank" rel="noopener">Sign in to Ansai ID</a> first, then come back and tap again.';}}};
 $("adCreate").onclick=async()=>{const msg=$("adMsg");try{const d=await post("/api/admin",{passcode:$("adPass").value,action:"create",name:$("adName").value,legal_form:$("adLegal").value,income_stream:$("adStream").value,owner_name:$("adOwner").value,kra_pin:$("adPin").value,access_code:$("adCode").value});
   msg.style.color="var(--ok)";msg.textContent="Workspace created for "+d.business.name+". Hand the owner the access code you just set.";}catch(err){msg.style.color="var(--bad)";msg.textContent=err.message;}};
-$("signOut").onclick=async()=>{await api("/api/session",{method:"POST"});BIZ=null;B=null;GASKTHREAD=[];showGate();};
+$("signOut").onclick=async()=>{await api("/api/session",{method:"POST"});BIZ=null;B=null;GASKTHREAD=[];showGate();try{const s=await api("/api/session");GOOGLE=s.google||null;if(GOOGLE)renderGoogleArea(GOOGLE,s.googleBusinesses||[]);}catch(e){}};
 $("newMonthBtn").onclick=async()=>{const p=$("newPeriod").value;if(!p){toast("Pick the month first.");return;}
   try{const d=await dataAct({action:"create_month",period:p});await loadHome();openMonth(d.month.id);}catch(err){toast(err.message);}};
 $("backHome").onclick=()=>{B=null;loadHome();};
@@ -828,7 +859,7 @@ $("backHome").onclick=()=>{B=null;loadHome();};
   if(!ENV.modelKey)notes.push("receipt auto-reading and Ask Hazi wait for <b>MODEL_API_KEY</b> (the same Meta key as Hazi)");
   if(!ENV.admin)notes.push("workspace creation waits for <b>HAZINA_ADMIN_PASSCODE</b> — a passcode you choose");
   if(notes.length){$("setupText").innerHTML="<b>Setup:</b> "+notes.join("; ")+".";$("setupNotice").classList.remove("hidden");}
-  if(s.business){await loadHome();}else showGate();
+  if(s.business){await loadHome();}else{showGate();GOOGLE=s.google||null;if(GOOGLE)renderGoogleArea(GOOGLE,s.googleBusinesses||[]);}
  }catch(e){showGate();}})();
 </script>
 </body>

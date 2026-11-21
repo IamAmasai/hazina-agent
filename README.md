@@ -53,9 +53,44 @@ graded against. Raw business records are never committed to this repo (see
 Copy `.env.example` to `.env` and add your Meta Model API key. Keys live in
 `.env` only — never in code, never in git.
 
+## Sign-in — the webapp's three doors
+
+1. **Google (the front door).** "Continue with Google" on the gate. The first
+   sign-in creates the person's account — sign-up and sign-in are one button.
+   Every sign-in upserts a row in `as_identities`, the identity table shared
+   with the Agent Store (one identity per person across the estate); the row's
+   `ansaiPersonId` stays null until the Ansai ID service gains a provisioning
+   API. The session is a signed cookie (`hz_google`, HMAC keyed by the OAuth
+   client secret, 30 days); the ID token is verified against Google's JWKS.
+2. **Workspace access code (the recovery door).** Unchanged: a code opens its
+   workspace directly, whether or not Google is involved.
+3. **Ansai ID.** Unchanged: members of a workspace via `hz_workspace_members`
+   open it from their Ansai ID session.
+
+**Linking model.** A Google session sees exactly the businesses whose
+`hz_businesses.owner_email` equals its verified email. While signed in with
+Google, entering a workspace's access code once links it (sets `owner_email`)
+and opens it; from then on it opens from the Google door directly. A workspace
+already linked to a different email refuses the link — a code can never move
+someone else's books onto your account. Businesses with no `owner_email` keep
+working by access code exactly as before.
+
+**Env (Vercel project `hazina-app`).** `GOOGLE_CLIENT_ID` and
+`GOOGLE_REDIRECT_URI` (= `https://hazina.ansaitechnologies.co.ke/api/auth?provider=google&step=callback`)
+are set. `GOOGLE_CLIENT_SECRET` — the secret of the shared "Ansai Web" OAuth
+client, the same value the Agent Store uses — is pasted by the founder in the
+Vercel dashboard; until it is set, the Google button lands on a plain
+"not switched on yet" page and the code door carries on. The matching
+authorised origin + redirect URI for the Hazina domain must exist on the
+"Ansai Web" client in Google Cloud Console.
+
+**Function cap.** `webapp/api/` now carries 12 route files — the Vercel Hobby
+cap. `api/auth.js` is the last route that fits; any future endpoint must fold
+into an existing route file, the way `api/pay.js` folds the Daraja callback in.
+
 ## Try Hazina live — for hackathon judges
 
-Hazina is gated by design: real businesses enter with a workspace access code or an Ansai ID, and there is no self-signup. For judging, a demo workspace is open:
+Hazina is gated by design: the front door is Google sign-in, and a workspace opens only once it is linked to the owner's Google account by its access code (the code itself, and Ansai ID, remain working doors). Signing in alone opens no books. For judging, a demo workspace is open:
 
 - **Live app:** https://hazina.ansaitechnologies.co.ke
 - **Access code:** `demo2026` — workspace *Kijiji Groceries (Demo)*, sample books for a small Nairobi grocery
