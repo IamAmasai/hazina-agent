@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# AI and agent crawlers are welcome.
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+
+Sitemap: https://hazina.ansaitechnologies.co.ke/sitemap.xml
