@@ -1,9 +1,8 @@
-const { passcodeOk, fail } = require("./_lib");
+const { envReady, getSessionBusiness, fail } = require("./_lib");
 
 // Reads one receipt image with Muse Spark vision and returns strict JSON.
-// The key lives only in the Vercel env (MODEL_API_KEY). Until it is set the
-// endpoint answers 503 and the UI falls back to merchant-confirmed entry —
-// Hazi asks, it does not invent.
+// Key lives only in the Vercel env (MODEL_API_KEY); without it the endpoint
+// answers 503 and the UI falls back to merchant-confirmed entry.
 const PROMPT =
   "Extract the data from this receipt or invoice image. Return strict JSON " +
   "only, no prose: {\"date\": \"YYYY-MM-DD\", \"vendor\": string, " +
@@ -13,7 +12,9 @@ const PROMPT =
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") { res.status(405).json({ error: "method not allowed" }); return; }
-  if (!passcodeOk(req)) { res.status(401).json({ error: "login required" }); return; }
+  if (!envReady()) { res.status(503).json({ error: "waiting for setup" }); return; }
+  const biz = await getSessionBusiness(req);
+  if (!biz) { res.status(401).json({ error: "login required" }); return; }
   const key = process.env.MODEL_API_KEY;
   if (!key) { res.status(503).json({ error: "waiting for key", detail: "MODEL_API_KEY is not set" }); return; }
   try {
@@ -22,31 +23,21 @@ module.exports = async (req, res) => {
     const headers = { "Content-Type": "application/json" };
     headers["Author" + "ization"] = "Bea" + "rer " + key;
     const r = await fetch("https://api.meta.ai/v1/chat/completions", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: "muse-spark-1.3",
-        max_tokens: 3000,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "text", text: PROMPT },
-            { type: "image_url", image_url: { url: body.image } },
-          ],
-        }],
-      }),
+      method: "POST", headers,
+      body: JSON.stringify({ model: "muse-spark-1.3", max_tokens: 3000, messages: [{ role: "user", content: [{ type: "text", text: PROMPT }, { type: "image_url", image_url: { url: body.image } }] }] }),
     });
-    if (!r.ok) {
-      const t = await r.text();
-      res.status(502).json({ error: "model api " + r.status, detail: t.slice(0, 200) });
-      return;
-    }
+    if (!r.ok) { const t = await r.text(); res.status(502).json({ error: "model api " + r.status, detail: t.slice(0, 200) }); return; }
     const data = await r.json();
     const content = (((data.choices || [])[0] || {}).message || {}).content || "";
     let parsed = null;
     try { parsed = JSON.parse(content); } catch (e) { /* fall through */ }
     if (!parsed) { res.status(502).json({ error: "model returned non-JSON" }); return; }
-    parsed.usage = data.usage || {};
+    // the flag is explicit — the model's JSON is never passed through as settled.
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    const itemsSum = items.reduce((s, item) => s + (+((item && item.amount_kes) || 0)), 0);
+    const total = typeof parsed.amount_kes === "number" ? parsed.amount_kes : null;
+    parsed.items_sum_kes = itemsSum;
+    parsed.cross_check = (items.length > 0 && total !== null && Math.abs(itemsSum - total) > 0.5) ? "items_do_not_sum_to_total" : "ok";
     res.status(200).json(parsed);
   } catch (e) { fail(res, e); }
 };
