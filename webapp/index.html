@@ -287,6 +287,47 @@ select.mini{width:auto;padding:6px 26px 6px 9px;font-size:12px;border-radius:8px
 .integ b{font-size:14px;display:block}
 .integ span{font-size:12.5px;color:var(--mut);display:block;line-height:1.45}
 .integ .badge{margin-left:auto;flex:none}
+/* welcome guide */
+.wiz-overlay{position:fixed;inset:0;z-index:80;background:rgba(10,25,40,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;padding:14px}
+@media(min-width:640px){.wiz-overlay{align-items:center}}
+.wiz-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);max-width:520px;width:100%;padding:24px 22px 20px;animation:rise .45s var(--ease) both}
+.wiz-dots{display:flex;gap:6px;margin-bottom:16px}
+.wiz-dots i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:all .3s var(--ease)}
+.wiz-dots i.on{width:24px;background:var(--gold)}
+.wiz-card h2{font-family:'Fraunces',serif;font-weight:600;font-size:23px;margin:0 0 8px}
+.wiz-card p{font-size:14.5px;color:var(--ink2);line-height:1.6;margin:0}
+.wiz-card a{color:var(--azure);font-weight:600;text-decoration:none}
+.wiz-nav{display:flex;align-items:center;gap:9px;margin-top:22px}
+.wiz-skip{background:none;border:0;color:var(--mut);font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;margin-left:auto;padding:6px 2px}
+.wiz-nav #wizNext{margin-left:0}
+.wiz-nav #wizBack{visibility:hidden}
+.wiz-nav #wizBack.show{visibility:visible}
+/* sales invoices */
+.inv-row{display:grid;grid-template-columns:1fr 64px 104px 34px;gap:8px;margin-top:8px;align-items:center}
+.inv-row input{padding:10px 11px;font-size:14.5px}
+.inv-row .inv-del{background:none;border:0;color:var(--mut);font-size:17px;cursor:pointer;padding:4px;line-height:1}
+.invdoc{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px 24px;box-shadow:var(--shadow);color:#0D1B2A}
+.invdoc .inv-head{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:2px solid #0D1B2A;padding-bottom:14px}
+.invdoc h2{font-family:'Fraunces',serif;font-weight:700;font-size:24px;margin:0}
+.invdoc .inv-meta{font-size:12.5px;color:#4A5F75;text-align:right;line-height:1.55}
+.invdoc .inv-party{font-size:13.5px;line-height:1.6;margin-top:14px}
+.invdoc .inv-party b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#64798E;margin-bottom:2px}
+.invtable{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:16px}
+.invtable th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#64798E;padding:7px 6px;border-bottom:1px solid #D9E4F0}
+.invtable td{padding:8px 6px;border-bottom:1px solid #EDF1F7;vertical-align:top}
+.invtable .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.invtable tr.tot td{border-bottom:0;border-top:2px solid #0D1B2A;font-weight:800;font-size:15px;padding-top:11px}
+.inv-note{font-size:12.5px;color:#4A5F75;line-height:1.55;margin-top:14px}
+.inv-cu{border:1.8px dashed #B9CCE8;border-radius:12px;padding:15px 14px;text-align:center;color:#64798E;font-size:13px;line-height:1.55;margin-top:18px}
+.inv-cu.filled{border-style:solid;border-color:#2BB673;color:#0D1B2A}
+.inv-cu b{display:block;font-size:15px}
+@media print{
+  header,#tabs,.backlink,.hero,#toast,.noprint,#setupNotice{display:none!important}
+  body::before{display:none}
+  body{background:#fff}
+  #wrap{padding:0;max-width:none}
+  .invdoc{box-shadow:none;border:0;border-radius:0;padding:6px}
+}
 number-flow{font:inherit;font-variant-numeric:tabular-nums}
 </style>
 </head>
@@ -296,7 +337,7 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
   <div class="hrow">
     <div class="mark"><svg viewBox="0 0 48 48" fill="none"><path d="M10 8a2 2 0 012-2h24a2 2 0 012 2v34l-5-3.4L28 42l-4-3-4 3-5-3.4L10 42z" fill="rgba(255,255,255,.14)"/><path d="M17 15h14M17 21h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M17.5 30.5l3.6 3.6L29 26.5" stroke="#F2C14E" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div><div class="hname">Hazina</div><div class="hsub">Books, kept properly</div></div>
-    <div class="hbiz"><b id="hBiz">Welcome</b><button id="signOut" class="hidden">Sign out</button></div>
+    <div class="hbiz"><b id="hBiz">Welcome</b><button id="wizLink" class="hidden">Welcome guide</button><button id="signOut" class="hidden">Sign out</button></div>
   </div>
 </header>
 
@@ -349,7 +390,7 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
           <div class="gate-txn"><div class="gate-txn-d"><b>Shop rent — November</b><span>1 Nov · Bank</span></div><span class="badge badge-mint">Matched</span><span class="gate-txn-a out">− KSh 25,000</span></div>
           <div class="gate-panel-foot">Filing pack saved · figures frozen in the pack</div>
         </div>
-        <div class="gate-offer"><b>New here? Your first month is completely free</b> — the full close, with the filing pack. Your records stay in your own workspace in our database (EU); photos of receipts and statements are read once to extract the figures and are never kept. Ask us for a workspace: <a href="mailto:hello@ansaitechnologies.co.ke?subject=Hazina%20—%20free%20first%20close">hello@ansaitechnologies.co.ke</a></div>
+        <div class="gate-offer"><p><b>New here? Your first month is completely free</b> — the full close, with the filing pack. From the second month, each month's close is <b>KSh 999</b> — pay per close, no contract.</p><p style="margin-top:8px">Sign in with Google and name your business — your workspace is created for you.</p><p style="margin-top:8px">Your records stay in your own workspace in our database (EU); photos of receipts and statements are read once to extract the figures and are never kept. Questions? <a href="mailto:hello@ansaitechnologies.co.ke">hello@ansaitechnologies.co.ke</a></p></div>
       </div>
     </div>
   </section>
@@ -392,6 +433,22 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
 </div>
 
 </div>
+
+<!-- WELCOME GUIDE -->
+<div id="wizOverlay" class="wiz-overlay hidden">
+  <div class="wiz-card" role="dialog" aria-modal="true" aria-labelledby="wizTitle">
+    <div class="wiz-dots" id="wizDots"></div>
+    <h2 id="wizTitle"></h2>
+    <p id="wizText"></p>
+    <div id="wizExtra"></div>
+    <div class="wiz-nav">
+      <button class="btn btn-ghost btn-sm" id="wizBack">Back</button>
+      <button class="wiz-skip" id="wizSkip">Skip the guide</button>
+      <button class="btn btn-gold" id="wizNext">Next</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -419,8 +476,9 @@ const DOC='<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-lineca
 // ---- state ----
 let ENV={db:false,modelKey:false,admin:false};
 let GOOGLE=null; // the verified Google session at the gate, if any {name,email}
-let BIZ=null, MONTHS=[], PACKS={}, B=null; // B = open month bundle {month,txns,receipts,questions,events,pack}
+let BIZ=null, MONTHS=[], PACKS={}, B=null; // B = open month bundle {month,txns,receipts,questions,events,pack,invoices}
 let TAB="overview", CSTEP=1, NEWRC=[], ASKTHREAD=[], GASKTHREAD=[];
+let WIZSEEN=true, INVVIEW=null, INVEDIT=null;
 const locked=()=>B&&B.month.status==="closed";
 const openQ=()=>B?B.questions.filter(q=>q.status==="open"):[];
 const txnById=id=>B?B.txns.find(t=>t.id===id):null;
@@ -481,7 +539,7 @@ async function sha256hex(text){try{const buf=await crypto.subtle.digest("SHA-256
 function download(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
 
 // ---- gate / home ----
-function showGate(){$("gateView").classList.remove("hidden");$("homeView").classList.add("hidden");$("monthView").classList.add("hidden");$("signOut").classList.add("hidden");$("hBiz").textContent="Welcome";}
+function showGate(){$("gateView").classList.remove("hidden");$("homeView").classList.add("hidden");$("monthView").classList.add("hidden");$("signOut").classList.add("hidden");$("wizLink").classList.add("hidden");$("hBiz").textContent="Welcome";}
 // ---- the Google door: create your own workspace (recovery code shown
 // once), open a linked one, or link an existing one by access code ----
 function linkFormHtml(){return '<div style="margin-top:10px"><input id="gLinkCode" type="password" placeholder="Workspace access code" autocomplete="current-password" style="text-align:center"><div style="margin-top:9px"><button id="gLinkBtn" class="btn btn-secondary" style="width:100%">Link &amp; open workspace</button></div></div>';}
@@ -508,9 +566,9 @@ function renderGoogleArea(person,businesses){
 }
 async function loadHome(){
   const d=await api("/api/data");
-  BIZ=d.business;MONTHS=d.months;PACKS=d.packs||{};
+  BIZ=d.business;MONTHS=d.months;PACKS=d.packs||{};WIZSEEN=d.wizardSeen!==false;
   $("gateView").classList.add("hidden");$("monthView").classList.add("hidden");$("homeView").classList.remove("hidden");
-  $("signOut").classList.remove("hidden");$("hBiz").textContent=BIZ.name;
+  $("signOut").classList.remove("hidden");$("wizLink").classList.remove("hidden");$("hBiz").textContent=BIZ.name;
   $("homeTitle").textContent=BIZ.name;
   $("homeSub").textContent=(BIZ.owner?("Owner: "+BIZ.owner+" · "):"")+(BIZ.legalForm==="limited_company"?"Limited company":BIZ.legalForm==="partnership"?"Partnership":"Sole trader")+" · books by month, closed properly.";
   const totY=MONTHS.reduce((s,m)=>{const p=PACKS[m.id];return s+(p&&p.results?+p.results.tot||0:0);},0);
@@ -523,15 +581,16 @@ async function loadHome(){
    :"<p class='lede' style='grid-column:1/-1'>No months yet. Start the first one below — last month is a good place to begin.</p>";
   document.querySelectorAll("[data-month]").forEach(el=>el.onclick=()=>openMonth(el.dataset.month));
   renderGAsk();renderInteg();enhance(document);
+  if(!WIZSEEN)openWiz();
 }
 async function openMonth(id){
-  B=await api("/api/data?month="+id);NEWRC=[];ASKTHREAD=[];TAB="overview";CSTEP=1;
+  B=await api("/api/data?month="+id);NEWRC=[];ASKTHREAD=[];TAB="overview";CSTEP=1;INVVIEW=null;INVEDIT=null;
   $("homeView").classList.add("hidden");$("gateView").classList.add("hidden");$("monthView").classList.remove("hidden");
   renderMonth();window.scrollTo({top:0});
 }
 
 // ---- month view ----
-const TABS=[["overview","Overview"],["ledger","Ledger"],["receipts","Receipts"],["close","Close with Hazi"],["pack","Pack"],["ask","Ask Hazi"],["activity","Activity"]];
+const TABS=[["overview","Overview"],["ledger","Ledger"],["receipts","Receipts"],["invoices","Invoices"],["close","Close with Hazi"],["pack","Pack"],["ask","Ask Hazi"],["activity","Activity"]];
 function renderMonth(){
   const m=B.month;
   $("mTitle").textContent=monthName(m.period);
@@ -539,9 +598,10 @@ function renderMonth(){
    "<span style='color:var(--mut);font-size:13px'>"+B.txns.length+" ledger lines · "+B.receipts.filter(r=>r.status==="confirmed").length+" confirmed receipts · TOT due "+dueDate(m.period)+"</span>";
   $("tabs").innerHTML=TABS.map(t=>"<button class='tab"+(TAB===t[0]?" on":"")+"' data-tab='"+t[0]+"'>"+t[1]+
    (t[0]==="receipts"&&B.receipts.filter(r=>r.status==="confirmed").length?"<span class='cnt'>"+B.receipts.filter(r=>r.status==="confirmed").length+"</span>":"")+
+   (t[0]==="invoices"&&(B.invoices||[]).length?"<span class='cnt'>"+B.invoices.length+"</span>":"")+
    (t[0]==="close"&&openQ().length?"<span class='cnt'>"+openQ().length+"</span>":"")+
    (t[0]==="pack"&&B.pack?"<span class='cnt'>✓</span>":"")+"</button>").join("");
-  $("tabBody").innerHTML=TAB==="overview"?overviewBody():TAB==="ledger"?ledgerBody():TAB==="receipts"?receiptsBody():TAB==="close"?closeBody():TAB==="pack"?packBody():TAB==="ask"?askBody():activityBody();
+  $("tabBody").innerHTML=TAB==="overview"?overviewBody():TAB==="ledger"?ledgerBody():TAB==="receipts"?receiptsBody():TAB==="invoices"?invoicesBody():TAB==="close"?closeBody():TAB==="pack"?packBody():TAB==="ask"?askBody():activityBody();
   enhance($("tabBody"));
   if(TAB==="close"&&B.payment&&B.payment.status==="pending")pollPay();
 }
@@ -787,11 +847,99 @@ function renderInteg() {
   elx.innerHTML = INTEG.map(i => `<div class="integ"><div class="iic">${PLUG}</div><div><b>${i.n}</b><span>${i.d}</span></div><span class="badge ${i.st === "live" || (i.st === "model" && ENV.modelKey) ? "badge-mint" : "badge-neutral"}">${i.st === "live" ? "Live" : i.st === "model" ? (ENV.modelKey ? "Live" : "Needs key") : "Roadmap"}</span></div>`).join("");
 }
 
+// ---- welcome guide (first-run wizard) ----
+const WIZ_STEPS=[
+ {t:"Welcome to Hazina",x:"Hazina keeps one business's books, month by month. Hazi, the agent, works the month beside you — reading the paper, matching it, and asking you about anything it cannot prove."},
+ {t:"Your month",x:"Each month starts with your records: add your M-Pesa statement, or photograph receipts as they come. Hazi reads them and lines them up — nothing is typed by hand, so nothing can be quietly altered."},
+ {t:"Receipts and eTIMS",x:"When a receipt carries an eTIMS mark, tick it as you confirm the receipt. KRA can disallow costs that are not eTIMS-backed — your filing pack shows the split, eTIMS-backed against paper-only, so you can see your exposure before KRA does."},
+ {t:"The close",x:"Your first month is completely free. From the second month, each close is KSh 999, paid by M-Pesa. The close produces your filing pack. Turnover Tax is 1.5% of gross sales, due by the 20th — you file on iTax. Hazi prepares; Hazi never files."},
+ {t:"Your data",x:"Your records stay in your own workspace in our database (EU). Photos of receipts and statements are read once to extract the figures and are never kept, and only your sign-in opens your books.",link:true}];
+let WIZAT=0;
+function openWiz(){WIZAT=0;wizRender();$("wizOverlay").classList.remove("hidden");}
+function wizRender(){
+  const s=WIZ_STEPS[WIZAT];
+  $("wizDots").innerHTML=WIZ_STEPS.map((_,i)=>"<i class='"+(i===WIZAT?"on":"")+"'></i>").join("");
+  $("wizTitle").textContent=s.t;
+  $("wizText").textContent=s.x;
+  $("wizExtra").innerHTML=s.link?"<p style='margin-top:10px'><a href='about.html'>Where your data goes — the full explanation →</a></p>":"";
+  $("wizBack").classList.toggle("show",WIZAT>0);
+  $("wizNext").textContent=WIZAT===WIZ_STEPS.length-1?"Start working":"Next";
+}
+async function wizClose(){
+  $("wizOverlay").classList.add("hidden");
+  if(!WIZSEEN){WIZSEEN=true;try{await dataAct({action:"set_wizard_seen"});}catch(e){/* the guide will offer itself again next time — never trap the user */}}
+}
+
+// ---- sales invoices (eTIMS format) ----
+function invChip(st){return st==="transmitted"?"<span class='badge badge-mint'>Sent to eTIMS</span>":st==="rendered"?"<span class='badge badge-azure'>Rendered</span>":"<span class='badge badge-neutral'>Draft</span>";}
+function invRowHTML(it){
+  return "<div class='inv-row'><input type='text' class='inv-d' placeholder='What was sold' value='"+esc(it?it.description||"":"")+"'><input type='number' class='inv-q' inputmode='decimal' min='0' step='any' value='"+(it?it.qty||1:1)+"'><input type='number' class='inv-a' inputmode='decimal' min='0' step='any' placeholder='Price' value='"+(it?it.amount||"":"")+"'><button type='button' class='inv-del' data-inv-delrow title='Remove this line'>×</button></div>";}
+function collectInvItems(){
+  const rows=[];document.querySelectorAll("#invRows .inv-row").forEach(r=>{
+    const d=r.querySelector(".inv-d").value.trim(),q=parseFloat(r.querySelector(".inv-q").value)||0,a=parseFloat(r.querySelector(".inv-a").value)||0;
+    if(d||a)rows.push({description:d,qty:q||1,amount:a});});
+  return rows;}
+function invoiceDocHTML(inv){
+  const items=inv.items||[];
+  let h="<div class='btnrow noprint' style='margin:0 0 12px'><button class='btn btn-sm btn-ghost' data-inv-back>← All invoices</button><button class='btn btn-sm btn-primary' data-inv-print>Print / save PDF</button></div>";
+  h+="<div class='invdoc'><div class='inv-head'><div><h2>"+esc(BIZ.name)+"</h2><div style='font-size:12.5px;color:#4A5F75;margin-top:3px'>KRA PIN: "+esc(BIZ.kraPin||"—")+"</div></div>"+
+   "<div class='inv-meta'><b style='font-size:14px;color:#0D1B2A'>TAX INVOICE</b><br>"+esc(inv.number)+"<br>"+new Date(inv.created_at).toLocaleDateString("en-KE",{day:"numeric",month:"long",year:"numeric"})+"</div></div>"+
+   "<div class='inv-party'><b>Billed to</b>"+esc(inv.buyer_name)+(inv.buyer_pin?"<br>KRA PIN: "+esc(inv.buyer_pin):"")+"</div>"+
+   "<table class='invtable'><tr><th>Description</th><th class='r'>Qty</th><th class='r'>Unit price</th><th class='r'>Amount</th></tr>"+
+   items.map(it=>"<tr><td>"+esc(it.description)+"</td><td class='r'>"+(+it.qty||1)+"</td><td class='r'>"+fmt(it.amount)+"</td><td class='r'>"+fmt(it.lineTotal!=null?it.lineTotal:(+it.qty||1)*(+it.amount||0))+"</td></tr>").join("")+
+   "<tr class='tot'><td colspan='3'>Total</td><td class='r'>"+fmt(inv.total)+"</td></tr></table>"+
+   "<p class='inv-note'>Turnover Tax applies to the seller's gross sales at 1.5% — no VAT is charged on this invoice.</p>";
+  if(inv.status==="transmitted"&&inv.cu_invoice_no)h+="<div class='inv-cu filled'><b>eTIMS control number: "+esc(inv.cu_invoice_no)+"</b>Sent to KRA eTIMS"+(inv.transmitted_at?" on "+new Date(inv.transmitted_at).toLocaleDateString("en-KE",{day:"numeric",month:"long",year:"numeric"}):"")+".</div>";
+  else h+="<div class='inv-cu'>eTIMS control number and QR appear here once your workspace is connected to eTIMS.</div>";
+  return h+"</div>";}
+function invoicesBody(){
+  const invs=B.invoices||[];
+  if(INVVIEW){const inv=invs.find(x=>x.id===INVVIEW);if(inv)return invoiceDocHTML(inv);INVVIEW=null;}
+  let h="<div class='card'><h2>Sales invoices</h2><p class='lede'>Raise an invoice for a sale and Hazina renders it in <b>eTIMS format</b> — seller, buyer, lines and totals in KRA's shape, ready to print or share. Sending it to KRA itself uses your workspace's eTIMS connection; until that is in place, a rendered invoice stays here, exact and ready.</p>";
+  if(!BIZ.kraPin){
+    h+="<div class='alert alert-warning'>"+WARN+"<div><b>One thing first:</b> your KRA PIN is printed on every invoice as the seller. Add it once and it stays on the workspace.</div></div>"+
+     "<label class='fl'>Business KRA PIN</label><input type='text' id='bizPin' placeholder='e.g. A012345678B' style='max-width:280px'><div class='btnrow'><button class='btn btn-primary btn-sm' id='bizPinBtn'>Save KRA PIN</button></div>";
+  }else{
+    h+="<p class='lede' style='margin-top:2px'>Seller on every invoice: <b>"+esc(BIZ.name)+"</b> · KRA PIN <b>"+esc(BIZ.kraPin)+"</b></p>";
+  }
+  if(!locked()){
+    const ed=INVEDIT?invs.find(x=>x.id===INVEDIT):null;
+    if(INVEDIT&&!ed)INVEDIT=null;
+    h+="<h3 style='margin:18px 0 2px;font-size:15px'>"+(ed?"Edit invoice "+esc(ed.number):"New invoice")+"</h3>"+
+     "<label class='fl'>Buyer name</label><input type='text' id='invBuyer' placeholder='Who bought?' value='"+esc(ed?ed.buyer_name:"")+"'>"+
+     "<label class='fl'>Buyer KRA PIN (optional)</label><input type='text' id='invPin' placeholder='Only if the buyer gives it' value='"+esc(ed&&ed.buyer_pin?ed.buyer_pin:"")+"' style='max-width:280px'>"+
+     "<label class='fl'>Lines — what was sold, how many, at what price</label><div id='invRows'>"+(ed?(ed.items||[]).map(invRowHTML).join(""):invRowHTML(null))+"</div>"+
+     "<div class='btnrow'><button class='btn btn-sm btn-ghost' data-inv-addrow>+ Add a line</button></div>"+
+     "<p class='lede' style='margin-top:10px'>The total is worked out from the lines when you save — it is never typed in.</p>"+
+     "<div class='btnrow'><button class='btn btn-gold' id='invSaveBtn'>"+(ed?"Save changes":"Save draft invoice")+"</button>"+(ed?"<button class='btn btn-ghost' data-inv-canceledit>Cancel editing</button>":"")+"</div><div id='invErr' class='err'></div>";
+  }
+  h+="<h3 style='margin:20px 0 2px;font-size:15px'>This month's invoices</h3>";
+  if(!invs.length)h+="<p class='lede'>None yet — the first sale you invoice appears here.</p>";
+  h+=invs.map(inv=>"<div class='lrow'><div class='ld'><b>"+esc(inv.number)+" — "+esc(inv.buyer_name)+"</b><span>"+new Date(inv.created_at).toLocaleDateString("en-KE",{day:"numeric",month:"short"})+(inv.status==="transmitted"&&inv.cu_invoice_no?" · eTIMS "+esc(inv.cu_invoice_no):"")+"</span></div>"+invChip(inv.status)+"<span class='la'>"+fmt(inv.total)+"</span>"+
+   "<button class='btn btn-sm btn-ghost' data-inv-view='"+inv.id+"'>View</button>"+
+   (!locked()&&inv.status==="draft"?"<button class='btn btn-sm btn-ghost' data-inv-edit='"+inv.id+"'>Edit</button><button class='btn btn-sm btn-primary' data-inv-render='"+inv.id+"'>Render</button>":"")+
+   (!locked()&&inv.status==="rendered"?"<button class='btn btn-sm btn-gold' data-inv-send='"+inv.id+"'>Send to eTIMS</button>":"")+
+   "</div>").join("");
+  return h+"</div>";}
+
 // ---- global wiring ----
 document.addEventListener("click",async e=>{
   const jump=e.target.closest("[data-jump]");if(jump){TAB=jump.dataset.jump;renderMonth();window.scrollTo({top:0,behavior:"smooth"});return;}
   const tab=e.target.closest("[data-tab]");if(tab){TAB=tab.dataset.tab;renderMonth();return;}
   const cs=e.target.closest("[data-cstep]");if(cs){CSTEP=+cs.dataset.cstep;renderMonth();return;}
+  const idel=e.target.closest("[data-inv-delrow]");if(idel){const row=idel.closest(".inv-row");if(row&&document.querySelectorAll("#invRows .inv-row").length>1)row.remove();return;}
+  if(e.target.closest("[data-inv-addrow]")){const w=$("invRows");if(w){const d=document.createElement("div");d.innerHTML=invRowHTML(null);w.appendChild(d.firstChild);}return;}
+  const iview=e.target.closest("[data-inv-view]");if(iview){INVVIEW=iview.dataset.invView;renderMonth();window.scrollTo({top:0});return;}
+  if(e.target.closest("[data-inv-back]")){INVVIEW=null;renderMonth();return;}
+  if(e.target.closest("[data-inv-print]")){window.print();return;}
+  const iedit=e.target.closest("[data-inv-edit]");if(iedit){INVEDIT=iedit.dataset.invEdit;INVVIEW=null;renderMonth();return;}
+  if(e.target.closest("[data-inv-canceledit]")){INVEDIT=null;renderMonth();return;}
+  const iren=e.target.closest("[data-inv-render]");if(iren){try{await dataAct({action:"set_invoice_status",monthId:B.month.id,invoiceId:iren.dataset.invRender,status:"rendered"});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Invoice rendered in eTIMS format.");}catch(err){toast(err.message);}return;}
+  const isend=e.target.closest("[data-inv-send]");if(isend){try{const r=await dataAct({action:"transmit_invoice",monthId:B.month.id,invoiceId:isend.dataset.invSend});B=await api("/api/data?month="+B.month.id);renderMonth();toast(r.connected?"Sent to eTIMS ✓":"This workspace isn't connected to eTIMS yet — the invoice stays rendered, ready to send.");}catch(err){toast(err.message);}return;}
+  if(e.target.closest("#bizPinBtn")){const v=($("bizPin").value||"").trim();try{const r=await dataAct({action:"set_business_details",kraPin:v});BIZ.kraPin=r.kraPin;renderMonth();toast("KRA PIN saved — it will print on your invoices.");}catch(err){toast(err.message);}return;}
+  if(e.target.closest("#invSaveBtn")){const items=collectInvItems();const errEl=$("invErr");
+    try{await dataAct({action:"save_invoice",monthId:B.month.id,invoice:{id:INVEDIT||undefined,buyerName:$("invBuyer").value,buyerPin:$("invPin").value,items}});INVEDIT=null;B=await api("/api/data?month="+B.month.id);renderMonth();toast("Invoice saved as a draft.");}
+    catch(err){if(errEl)errEl.textContent=err.message;}return;}
   const cn=e.target.closest("[data-cnext]");if(cn){CSTEP=+cn.dataset.cnext;TAB="close";renderMonth();return;}
   const act=e.target.closest("[data-act]");if(act){receiptAction(act.dataset.act,act.dataset.i);return;}
   const cat=e.target.closest("[data-cat]");if(cat){try{await dataAct({action:"answer",monthId:B.month.id,questionId:cat.dataset.qid,category:cat.dataset.cat});B=await api("/api/data?month="+B.month.id);renderMonth();toast("Answer recorded.");}catch(err){toast(err.message);}return;}
@@ -860,6 +1008,10 @@ $("signOut").onclick=async()=>{await api("/api/session",{method:"POST"});BIZ=nul
 $("newMonthBtn").onclick=async()=>{const p=$("newPeriod").value;if(!p){toast("Pick the month first.");return;}
   try{const d=await dataAct({action:"create_month",period:p});await loadHome();openMonth(d.month.id);}catch(err){toast(err.message);}};
 $("backHome").onclick=()=>{B=null;loadHome();};
+$("wizLink").onclick=()=>openWiz();
+$("wizBack").onclick=()=>{if(WIZAT>0){WIZAT--;wizRender();}};
+$("wizNext").onclick=()=>{if(WIZAT<WIZ_STEPS.length-1){WIZAT++;wizRender();}else wizClose();};
+$("wizSkip").onclick=()=>wizClose();
 (async()=>{try{const s=await api("/api/session");ENV=s.env;
   const notes=[];
   if(!ENV.db)notes.push("the <b>database</b> isn't connected yet — HAZINA_SUPABASE_URL and HAZINA_SUPABASE_SERVICE_KEY go into the hazina-app project settings in Vercel");

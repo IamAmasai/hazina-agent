@@ -1,5 +1,6 @@
 const { envReady, getSessionBusiness, list, insert, patch, del, sha256, logEvent, compute, packText, totCSV, RULES_VERSION, fail } = require("./_lib");
 const daraja = require("./_daraja");
+const etims = require("./_etims");
 
 // The workhorse: month bundles out, workspace actions in. Every request is
 // scoped to the session's business; a month id from another workspace is a 404.
@@ -9,14 +10,19 @@ async function ownMonth(biz, monthId) {
   return m && m.business_id === biz.id ? m : null;
 }
 async function bundle(monthId) {
-  const [txns, receipts, questions, events, packs] = await Promise.all([
+  const [txns, receipts, questions, events, packs, invoices] = await Promise.all([
     list("hz_txns", "month_id=eq." + monthId + "&select=*&order=txn_date.asc,created_at.asc"),
     list("hz_receipts", "month_id=eq." + monthId + "&select=*&order=created_at.asc"),
     list("hz_questions", "month_id=eq." + monthId + "&select=*&order=created_at.asc"),
     list("hz_events", "month_id=eq." + monthId + "&select=*&order=created_at.desc&limit=120"),
     list("hz_packs", "month_id=eq." + monthId + "&select=*&order=created_at.desc&limit=1"),
+    list("hz_invoices", "month_id=eq." + monthId + "&select=*&order=created_at.asc"),
   ]);
-  return { txns: txns || [], receipts: receipts || [], questions: questions || [], events: events || [], pack: (packs || [])[0] || null };
+  return { txns: txns || [], receipts: receipts || [], questions: questions || [], events: events || [], pack: (packs || [])[0] || null, invoices: invoices || [] };
+}
+async function ownInvoice(month, invoiceId) {
+  const rows = await list("hz_invoices", "id=eq." + invoiceId + "&month_id=eq." + month.id + "&select=*");
+  return (rows || [])[0] || null;
 }
 
 module.exports = async (req, res) => {
@@ -32,7 +38,7 @@ module.exports = async (req, res) => {
         const packs = months && months.length ? await list("hz_packs", "month_id=in.(" + months.map(m => m.id).join(",") + ")&select=month_id,results,created_at&order=created_at.desc") : [];
         const latest = {};
         for (const p of packs || []) if (!latest[p.month_id]) latest[p.month_id] = p;
-        res.status(200).json({ business: { id: biz.id, name: biz.name, legalForm: biz.legal_form, stream: biz.income_stream, kraPin: biz.kra_pin, owner: biz.owner_name }, months: months || [], packs: latest });
+        res.status(200).json({ business: { id: biz.id, name: biz.name, legalForm: biz.legal_form, stream: biz.income_stream, kraPin: biz.kra_pin, owner: biz.owner_name }, wizardSeen: !!(biz.meta && biz.meta.wizardSeen), months: months || [], packs: latest });
         return;
       }
       const month = await ownMonth(biz, monthId);
@@ -56,6 +62,21 @@ module.exports = async (req, res) => {
       if (!/^\d{4}-\d{2}$/.test(period)) { res.status(400).json({ error: "period must be YYYY-MM" }); return; }
       const rows = await insert("hz_months", [{ business_id: biz.id, period }]);
       res.status(200).json({ month: rows[0] }); return;
+    }
+
+    /* Workspace-level actions (no month needed): the welcome guide's
+       seen flag, and the business details invoices are rendered with. */
+    if (act === "set_wizard_seen") {
+      const meta = { ...(biz.meta && typeof biz.meta === "object" ? biz.meta : {}), wizardSeen: true };
+      await patch("hz_businesses", "id=eq." + biz.id, { meta });
+      res.status(200).json({ ok: true, wizardSeen: true }); return;
+    }
+    if (act === "set_business_details") {
+      const pin = String(b.kraPin || "").trim().toUpperCase();
+      if (!pin) { res.status(400).json({ error: "Add the business's KRA PIN — it is printed on every invoice." }); return; }
+      if (!/^[A-Z]\d{9}[A-Z]$/.test(pin)) { res.status(400).json({ error: "That doesn't look like a KRA PIN — it is one letter, nine digits, one letter (e.g. A012345678B)." }); return; }
+      await patch("hz_businesses", "id=eq." + biz.id, { kra_pin: pin });
+      res.status(200).json({ ok: true, kraPin: pin }); return;
     }
 
     const month = b.monthId ? await ownMonth(biz, b.monthId) : null;
@@ -118,6 +139,49 @@ module.exports = async (req, res) => {
     if (act === "delete_receipt") {
       await del("hz_receipts", "id=eq." + b.receiptId + "&month_id=eq." + month.id);
       res.status(200).json({ ok: true }); return;
+    }
+    if (act === "save_invoice") {
+      const inv = b.invoice || {};
+      const items = etims.cleanItems(inv.items);
+      if (!items.length) { res.status(400).json({ error: "Add at least one line item — what was sold, how many, and the price." }); return; }
+      const buyerName = String(inv.buyerName || "").trim().slice(0, 200);
+      if (!buyerName) { res.status(400).json({ error: "Add the buyer's name — an invoice names who bought." }); return; }
+      const fields = { buyer_name: buyerName, buyer_pin: String(inv.buyerPin || "").trim().toUpperCase() || null, items, total: etims.invoiceTotal(items) };
+      if (inv.id) {
+        const existing = await ownInvoice(month, inv.id);
+        if (!existing) { res.status(404).json({ error: "invoice not found" }); return; }
+        if (existing.status !== "draft") { res.status(409).json({ error: "A rendered invoice can't be edited — raise a new invoice instead, so the record stays exact." }); return; }
+        const rows = await patch("hz_invoices", "id=eq." + existing.id + "&month_id=eq." + month.id, fields);
+        res.status(200).json({ invoice: (rows || [])[0] }); return;
+      }
+      const prior = await list("hz_invoices", "business_id=eq." + biz.id + "&select=id");
+      const number = etims.invoiceNumber((prior || []).length + 1);
+      const rows = await insert("hz_invoices", [{ business_id: biz.id, month_id: month.id, number, ...fields, status: "draft" }]);
+      await logEvent(month.id, "merchant", "invoice_created", "Sales invoice " + number + " raised for " + buyerName + " — " + "KSh " + fields.total.toFixed(2) + ".");
+      res.status(200).json({ invoice: (rows || [])[0] }); return;
+    }
+    if (act === "set_invoice_status") {
+      const existing = await ownInvoice(month, b.invoiceId);
+      if (!existing) { res.status(404).json({ error: "invoice not found" }); return; }
+      if (b.status !== "rendered" || existing.status !== "draft") { res.status(409).json({ error: "Only a draft invoice can be rendered." }); return; }
+      const rows = await patch("hz_invoices", "id=eq." + existing.id + "&month_id=eq." + month.id, { status: "rendered" });
+      await logEvent(month.id, "merchant", "invoice_rendered", "Sales invoice " + existing.number + " rendered in eTIMS format.");
+      res.status(200).json({ invoice: (rows || [])[0] }); return;
+    }
+    if (act === "transmit_invoice") {
+      const existing = await ownInvoice(month, b.invoiceId);
+      if (!existing) { res.status(404).json({ error: "invoice not found" }); return; }
+      if (existing.status === "transmitted") { res.status(200).json({ connected: true, transmitted: true, invoice: existing }); return; }
+      if (existing.status !== "rendered") { res.status(409).json({ error: "Render the invoice before sending it to eTIMS." }); return; }
+      /* The transmission gate: without the workspace's own eTIMS
+         credentials (issued by KRA), nothing is sent and nothing is
+         stamped — the invoice simply stays rendered. */
+      const r = await etims.transmit(biz, existing);
+      if (!r.connected) { res.status(200).json({ connected: false, transmitted: false, invoice: existing }); return; }
+      if (!r.transmitted) { res.status(502).json({ error: r.error || "eTIMS did not accept the invoice." }); return; }
+      const rows = await patch("hz_invoices", "id=eq." + existing.id + "&month_id=eq." + month.id, { status: "transmitted", cu_invoice_no: r.cuInvoiceNo, qr_payload: r.qrPayload, transmitted_at: new Date().toISOString() });
+      await logEvent(month.id, "merchant", "invoice_transmitted", "Sales invoice " + existing.number + " sent to eTIMS — control number " + r.cuInvoiceNo + ".");
+      res.status(200).json({ connected: true, transmitted: true, invoice: (rows || [])[0] }); return;
     }
     if (act === "reconcile") {
       const matches = b.matches || [], questions = b.questions || [];
@@ -203,14 +267,17 @@ module.exports = async (req, res) => {
     if (act === "reset_month") {
       const txns = await list("hz_txns", "month_id=eq." + month.id + "&select=id");
       const receipts = await list("hz_receipts", "month_id=eq." + month.id + "&select=id");
+      const invoices = await list("hz_invoices", "month_id=eq." + month.id + "&select=id");
       const nTxns = (txns || []).length;
       const nReceipts = (receipts || []).length;
+      const nInvoices = (invoices || []).length;
       await del("hz_packs", "month_id=eq." + month.id);
       await del("hz_questions", "month_id=eq." + month.id);
       await del("hz_receipts", "month_id=eq." + month.id);
+      await del("hz_invoices", "month_id=eq." + month.id);
       await del("hz_txns", "month_id=eq." + month.id);
       await patch("hz_months", "id=eq." + month.id, { status: "open", closed_at: null });
-      await logEvent(month.id, "merchant", "month_reset", "Month started over by the merchant — " + nTxns + " statement/manual line(s), " + nReceipts + " receipt(s), and any answers and saved packs were cleared. The activity trail keeps this note.");
+      await logEvent(month.id, "merchant", "month_reset", "Month started over by the merchant — " + nTxns + " statement/manual line(s), " + nReceipts + " receipt(s), " + nInvoices + " invoice(s), and any answers and saved packs were cleared. The activity trail keeps this note.");
       res.status(200).json({ ok: true }); return;
     }
     if (act === "event") {
