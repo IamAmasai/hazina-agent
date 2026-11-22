@@ -765,7 +765,7 @@ function askBody(){
   h+="<div class='sugg'>"+["Why is my TOT this amount?","Which costs would KRA disallow?","What is still unanswered?","What happens if I cross the VAT threshold?"].map(q=>"<button data-sugg='"+esc(q)+"'>"+esc(q)+"</button>").join("")+"</div>";
   h+="<div class='chat' id='chat'>"+ASKTHREAD.map(m=>"<div class='bubble "+m.who+"'>"+(m.who==="hazi"?"<span class='who'>Hazi</span>":"")+esc(m.text)+"</div>").join("")+"</div>";
   h+="<div class='askrow'><input type='text' id='askInput' placeholder='Ask about "+monthName(B.month.period)+"…' "+(ENV.modelKey?"":"disabled")+"><button class='btn btn-primary' id='askSend' "+(ENV.modelKey?"":"disabled")+">Ask</button></div>";
-  if(!ENV.modelKey)h+="<div class='alert alert-warning'>"+WARN+"<div>Hazi's answers are waiting for the Meta API key (MODEL_API_KEY) in the project settings.</div></div>";
+  if(!ENV.modelKey)h+="<div class='alert alert-warning'>"+WARN+"<div>Hazi's answers are waiting for the model API key (MODEL_API_KEY) in the project settings.</div></div>";
   return h+"</div>";}
 // ---- ask hazi (workspace level: no month chosen) ----
 function gAskBody(){
@@ -773,7 +773,7 @@ function gAskBody(){
   h+="<div class='sugg'>"+["How does Hazina work?","What is my total TOT so far?","Which months are still open?","How much is a close after the free month?"].map(q=>"<button data-gsugg='"+esc(q)+"'>"+esc(q)+"</button>").join("")+"</div>";
   h+="<div class='chat' id='gChat'>"+GASKTHREAD.map(m=>"<div class='bubble "+m.who+"'>"+(m.who==="hazi"?"<span class='who'>Hazi</span>":"")+esc(m.text)+"</div>").join("")+"</div>";
   h+="<div class='askrow'><input type='text' id='gAskInput' placeholder='Ask Hazi anything…' "+(ENV.modelKey?"":"disabled")+"><button class='btn btn-primary' id='gAskSend' "+(ENV.modelKey?"":"disabled")+">Ask</button></div>";
-  if(!ENV.modelKey)h+="<div class='alert alert-warning'>"+WARN+"<div>Hazi's answers are waiting for the Meta API key (MODEL_API_KEY) in the project settings.</div></div>";
+  if(!ENV.modelKey)h+="<div class='alert alert-warning'>"+WARN+"<div>Hazi's answers are waiting for the model API key (MODEL_API_KEY) in the project settings.</div></div>";
   return h+"</div>";}
 function renderGAsk(){$("gAskCard").innerHTML=gAskBody();enhance($("gAskCard"));}
 // ---- activity ----
@@ -837,14 +837,14 @@ const INTEG = [
   { n: "M-Pesa statements", d: "Full statement exports import straight into the month — money in and out, never re-typed.", st: "live" },
   { n: "KRA filing formats", d: "The pack is assembled in KRA order, with the Turnover Tax values file ready for iTax.", st: "live" },
   { n: "eTIMS evidence split", d: "Every cost is split eTIMS-backed vs not — KRA validates returns against eTIMS from January 2026.", st: "live" },
-  { n: "Meta Muse Spark", d: "Reads receipt photos and powers Ask Hazi, grounded in your month's record only.", st: "model" },
+  { n: "Receipt & statement reading", d: "Photograph a receipt or statement — it is read and drafted into the month for your confirmation; Ask Hazi answers from your month's record only.", st: "live" },
   { n: "WhatsApp", d: "Hazi's questions and answers on WhatsApp, where the business already talks.", st: "soon" },
   { n: "Daraja live feeds", d: "Till and bank movements flowing in as they happen — statements become the backup, not the job.", st: "soon" },
   { n: "eTIMS invoicing", d: "Sales recorded in eTIMS invoice shape today; certified signing stays on KRA's roadmap.", st: "soon" }
 ];
 function renderInteg() {
   const elx = document.getElementById("integList"); if (!elx) return;
-  elx.innerHTML = INTEG.map(i => `<div class="integ"><div class="iic">${PLUG}</div><div><b>${i.n}</b><span>${i.d}</span></div><span class="badge ${i.st === "live" || (i.st === "model" && ENV.modelKey) ? "badge-mint" : "badge-neutral"}">${i.st === "live" ? "Live" : i.st === "model" ? (ENV.modelKey ? "Live" : "Needs key") : "Roadmap"}</span></div>`).join("");
+  elx.innerHTML = INTEG.map(i => `<div class="integ"><div class="iic">${PLUG}</div><div><b>${i.n}</b><span>${i.d}</span></div><span class="badge ${i.st === "live" ? "badge-mint" : "badge-neutral"}">${i.st === "live" ? "Live" : "Roadmap"}</span></div>`).join("");
 }
 
 // ---- welcome guide (first-run wizard) ----
@@ -1015,7 +1015,7 @@ $("wizSkip").onclick=()=>wizClose();
 (async()=>{try{const s=await api("/api/session");ENV=s.env;
   const notes=[];
   if(!ENV.db)notes.push("the <b>database</b> isn't connected yet — HAZINA_SUPABASE_URL and HAZINA_SUPABASE_SERVICE_KEY go into the hazina-app project settings in Vercel");
-  if(!ENV.modelKey)notes.push("receipt auto-reading and Ask Hazi wait for <b>MODEL_API_KEY</b> (the same Meta key as Hazi)");
+  if(!ENV.modelKey)notes.push("receipt auto-reading and Ask Hazi wait for <b>MODEL_API_KEY</b> (the same model key as Hazi)");
   if(!ENV.admin)notes.push("workspace creation waits for <b>HAZINA_ADMIN_PASSCODE</b> — a passcode you choose");
   if(notes.length){$("setupText").innerHTML="<b>Setup:</b> "+notes.join("; ")+".";$("setupNotice").classList.remove("hidden");}
   if(s.business){await loadHome();}else{showGate();GOOGLE=s.google||null;if(GOOGLE)renderGoogleArea(GOOGLE,s.googleBusinesses||[]);}
