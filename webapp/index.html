@@ -48,7 +48,8 @@ header{position:sticky;top:0;z-index:40;margin:0 -16px;padding:12px 16px 11px;ba
 .hsub{font-size:11.5px;color:var(--mut);font-weight:500;margin-top:2px}
 .hbiz{margin-left:auto;text-align:right;min-width:0}
 .hbiz b{display:block;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
-.hbiz button{background:none;border:0;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:2px 0}
+.hbiz button{background:none;border:0;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:2px 0;white-space:nowrap}
+.hbtns{display:flex;gap:16px;justify-content:flex-end;margin-top:2px}
 .hero{padding:26px 4px 4px;animation:rise .6s var(--ease) both}
 .hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:31px;line-height:1.14;margin:0 0 8px;letter-spacing:-.01em}
 .hero h1 em{font-style:normal;background:linear-gradient(92deg,var(--azure),#7C5CFC);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -337,7 +338,7 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
   <div class="hrow">
     <div class="mark"><svg viewBox="0 0 48 48" fill="none"><path d="M10 8a2 2 0 012-2h24a2 2 0 012 2v34l-5-3.4L28 42l-4-3-4 3-5-3.4L10 42z" fill="rgba(255,255,255,.14)"/><path d="M17 15h14M17 21h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M17.5 30.5l3.6 3.6L29 26.5" stroke="#F2C14E" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div><div class="hname">Hazina</div><div class="hsub">Books, kept properly</div></div>
-    <div class="hbiz"><b id="hBiz">Welcome</b><button id="wizLink" class="hidden">Welcome guide</button><button id="signOut" class="hidden">Sign out</button></div>
+    <div class="hbiz"><b id="hBiz">Welcome</b><span class="hbtns"><button id="wizLink" class="hidden">Welcome guide</button><button id="signOut" class="hidden">Sign out</button></span></div>
   </div>
 </header>
 
@@ -366,17 +367,7 @@ number-flow{font:inherit;font-variant-numeric:tabular-nums}
           <button id="idBtn" class="btn btn-secondary" style="width:100%">Continue with Ansai ID</button>
           <div id="idMsg" style="font-size:13px;color:var(--ink);font-weight:600;margin-top:9px;text-align:center"></div>
           <div id="idPick"></div>
-          <details>
-            <summary>Ansai admin — create a workspace</summary>
-            <label class="fl">Admin passcode</label><input id="adPass" type="password">
-            <label class="fl">Business name</label><input id="adName" type="text" placeholder="e.g. Beautify by Angel">
-            <div class="grid2"><div><label class="fl">Legal form</label><select id="adLegal"><option value="sole_trader">Sole trader</option><option value="limited_company">Limited company</option><option value="partnership">Partnership</option></select></div><div><label class="fl">Income is mostly</label><select id="adStream"><option value="trading">Trading / services</option><option value="professional_fees">Professional fees</option><option value="mixed">Mixed</option></select></div></div>
-            <label class="fl">Owner name</label><input id="adOwner" type="text">
-            <label class="fl">KRA PIN (optional)</label><input id="adPin" type="text">
-            <label class="fl">Access code for this business (6+ characters)</label><input id="adCode" type="text">
-            <div class="btnrow"><button id="adCreate" class="btn btn-gold" style="width:100%">Create workspace</button></div>
-            <div id="adMsg" style="font-size:13px;font-weight:600;margin-top:8px"></div>
-          </details>
+
         </div>
       </div>
       <div class="gate-side">
@@ -1002,8 +993,6 @@ document.addEventListener("keydown",e=>{
 // ---- boot & gate wiring ----
 $("gateBtn").onclick=async()=>{try{await post("/api/login",{code:$("gateCode").value});$("gateMsg").textContent="";await loadHome();toast("Workspace open.");}catch(err){$("gateMsg").textContent=err.message;}};
 $("idBtn").onclick=async()=>{try{$("idMsg").textContent="";$("idPick").innerHTML="";const w=await api("/api/id-workspaces");if(!w.workspaces||w.workspaces.length===0){$("idMsg").textContent="This Ansai ID isn't a member of any Hazina workspace yet.";return;}if(w.workspaces.length===1){const d=await post("/api/id-login",{});await loadHome();toast("Workspace open — signed in as "+(d.person.name||"Ansai ID")+".");return;}const box=$("idPick");box.innerHTML="";w.workspaces.forEach((ws)=>{const b=document.createElement("button");b.className="btn btn-ghost";b.style.width="100%";b.style.marginTop="6px";b.textContent=ws.name;b.onclick=async()=>{try{const d2=await post("/api/id-login",{businessId:ws.id});await loadHome();toast("Workspace open — signed in as "+(d2.person.name||"Ansai ID")+".");}catch(err2){if(err2.message&&err2.message.indexOf("member")!==-1){$("idMsg").textContent=err2.message;}else{$("idMsg").innerHTML='No Ansai ID session found. <a href="https://id.ansaitechnologies.co.ke/admin.html" target="_blank" rel="noopener">Sign in to Ansai ID</a> first, then come back and tap again.';}}};box.appendChild(b);});}catch(err){if(err.message&&err.message.indexOf("member")!==-1){$("idMsg").textContent=err.message;}else{$("idMsg").innerHTML='No Ansai ID session found. <a href="https://id.ansaitechnologies.co.ke/admin.html" target="_blank" rel="noopener">Sign in to Ansai ID</a> first, then come back and tap again.';}}};
-$("adCreate").onclick=async()=>{const msg=$("adMsg");try{const d=await post("/api/admin",{passcode:$("adPass").value,action:"create",name:$("adName").value,legal_form:$("adLegal").value,income_stream:$("adStream").value,owner_name:$("adOwner").value,kra_pin:$("adPin").value,access_code:$("adCode").value});
-  msg.style.color="var(--ok)";msg.textContent="Workspace created for "+d.business.name+". Hand the owner the access code you just set.";}catch(err){msg.style.color="var(--bad)";msg.textContent=err.message;}};
 $("signOut").onclick=async()=>{await api("/api/session",{method:"POST"});BIZ=null;B=null;GASKTHREAD=[];showGate();try{const s=await api("/api/session");GOOGLE=s.google||null;if(GOOGLE)renderGoogleArea(GOOGLE,s.googleBusinesses||[]);}catch(e){}};
 $("newMonthBtn").onclick=async()=>{const p=$("newPeriod").value;if(!p){toast("Pick the month first.");return;}
   try{const d=await dataAct({action:"create_month",period:p});await loadHome();openMonth(d.month.id);}catch(err){toast(err.message);}};
